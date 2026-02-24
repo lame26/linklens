@@ -1,175 +1,299 @@
-// ================================================================
-// LinkLens AI Worker
-// ================================================================
-// 환경변수 설정 (Workers > Settings > Variables and Secrets):
-//   OPENAI_API_KEY = sk-proj-...
-// ================================================================
+﻿const rateBuckets = new Map();
+// In-memory best-effort limiter: per isolate/process, resets on cold start.
 
 export default {
   async fetch(request, env) {
+    const origin = request.headers.get('Origin') || '';
 
-    // CORS preflight — 모든 Origin 허용
     if (request.method === 'OPTIONS') {
-      return new Response(null, { status: 204, headers: corsHeaders() });
+      if (!isOriginAllowed(origin, env)) {
+        return new Response(null, { status: 403, headers: corsHeaders(origin, env) });
+      }
+      return new Response(null, { status: 204, headers: corsHeaders(origin, env) });
     }
 
-    // POST /analyze 만 처리
-    const url = new URL(request.url);
-    if (request.method !== 'POST' || url.pathname !== '/analyze') {
-      return json({ error: 'POST /analyze 로 요청하세요' }, 404);
+    if (!isOriginAllowed(origin, env)) {
+      return json({ error: 'Origin not allowed' }, 403, request, env);
     }
 
-    // API 키 확인
-    if (!env.OPENAI_API_KEY) {
-      return json({ error: 'OPENAI_API_KEY 환경변수가 설정되지 않았습니다' }, 500);
+    const reqUrl = new URL(request.url);
+    if (request.method !== 'POST') {
+      return json({ error: 'POST only' }, 405, request, env);
     }
 
-    let articleUrl;
+    const authHeader = request.headers.get('Authorization') || '';
+    if (!authHeader.startsWith('Bearer ')) {
+      return json({ error: 'Authorization header is required' }, 401, request, env);
+    }
+
+    const token = authHeader.slice('Bearer '.length).trim();
+    if (!token) {
+      return json({ error: 'Authorization token is required' }, 401, request, env);
+    }
+
+    const user = await verifySupabaseUser(token, env);
+    if (user.error) {
+      return json({ error: user.error }, user.status || 401, request, env);
+    }
+
+    const limitPerMin = Number.parseInt(env.RATE_LIMIT_PER_MIN || '30', 10);
+    if (!checkRateLimit(user.data.id, Number.isFinite(limitPerMin) ? limitPerMin : 30)) {
+      return json({ error: 'Rate limit exceeded' }, 429, request, env);
+    }
+
+    let articleUrl = '';
     try {
       const body = await request.json();
-      articleUrl = body.url;
+      articleUrl = body?.url || '';
     } catch {
-      return json({ error: 'JSON 파싱 실패' }, 400);
+      return json({ error: 'Invalid JSON body' }, 400, request, env);
     }
 
     if (!articleUrl) {
-      return json({ error: 'url 필드가 필요합니다' }, 400);
+      return json({ error: 'url is required' }, 400, request, env);
     }
 
-    // ── 1단계: 제목(HTML 직접) + 본문(Jina) 병렬 fetch ──
-    let rawText = '';
-    let fetchedTitle = '';
-
-    const [htmlRes, jinaRes] = await Promise.allSettled([
-      // 1-A: 직접 HTML fetch → og:title / <title> 추출 (Jina 오작동과 무관)
-      fetch(articleUrl, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (compatible; LinkLensBot/1.0)',
-          'Accept': 'text/html',
-        },
-        redirect: 'follow',
-        cf: { timeout: 8000 },
-      }),
-      // 1-B: Jina → 본문 텍스트 전용
-      fetch('https://r.jina.ai/' + articleUrl, {
-        headers: { 'Accept': 'text/plain', 'X-Return-Format': 'markdown' },
-      }),
-    ]);
-
-    // 1-A 결과: og:title → twitter:title → <title> 순으로 추출
-    if (htmlRes.status === 'fulfilled' && htmlRes.value.ok) {
-      try {
-        const html = await htmlRes.value.text();
-        const ogTitle    = html.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i)
-                        || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:title["']/i);
-        const twTitle    = html.match(/<meta[^>]+name=["']twitter:title["'][^>]+content=["']([^"']+)["']/i)
-                        || html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+name=["']twitter:title["']/i);
-        const plainTitle = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-
-        fetchedTitle = (ogTitle?.[1] || twTitle?.[1] || plainTitle?.[1] || '').trim();
-        // " | 사이트명" 같은 suffix 제거 (긴 쪽이 제목일 때는 유지)
-        fetchedTitle = fetchedTitle.replace(/\s*[\|·—–-]\s*[^|·—–-]{2,40}$/, '').trim() || fetchedTitle;
-      } catch {}
+    if (reqUrl.pathname === '/preview') {
+      return handlePreview(articleUrl, request, env);
     }
 
-    // 1-B 결과: 본문 텍스트
-    if (jinaRes.status === 'fulfilled' && jinaRes.value.ok) {
-      try {
-        const text = await jinaRes.value.text();
-        // Jina 제목은 htmlRes에서 못 가져왔을 때만 폴백으로 사용
-        if (!fetchedTitle) {
-          const m = text.match(/^Title:\s*(.+)$/m);
-          if (m) fetchedTitle = m[1].trim();
-        }
-        rawText = text
-          .replace(/^(Title|URL|Published Time|Description|Markdown Content):.*$/gm, '')
-          .replace(/!\[.*?\]\(.*?\)/g, '')
-          .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-          .replace(/```[\s\S]*?```/g, '')
-          .replace(/#{1,6}\s+/g, '')
-          .replace(/\n{3,}/g, '\n\n')
-          .trim()
-          .slice(0, 3000);
-      } catch {}
+    if (reqUrl.pathname === '/analyze') {
+      if (!env.OPENAI_API_KEY) {
+        return json({ error: 'OPENAI_API_KEY is missing' }, 500, request, env);
+      }
+      return handleAnalyze(articleUrl, env.OPENAI_API_KEY, request, env);
     }
 
-    // ── 2단계: OpenAI 호출 ──
-    // fetchedTitle을 프롬프트에 명시적으로 전달 → GPT가 제목을 새로 지어내지 않도록
-    const titleHint = fetchedTitle
-      ? `원문 제목: "${fetchedTitle}"\n\n`
-      : '';
-
-    const prompt = rawText
-      ? `${titleHint}다음 기사를 분석해주세요.\n\n${rawText}`
-      : `다음 URL의 기사를 분석해주세요: ${articleUrl}`;
-
-    let aiRes;
-    try {
-      aiRes = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + env.OPENAI_API_KEY,
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          temperature: 0.3,
-          max_tokens: 600,
-          response_format: { type: 'json_object' },
-          messages: [
-            {
-              role: 'system',
-              content: `당신은 뉴스 기사 분석 전문가입니다. 반드시 아래 JSON 형식으로만 응답하세요.
-
-{"title":"기사 제목","summary":"3~4문장 핵심 요약 (한국어)","keywords":["키워드1","키워드2","키워드3","키워드4","키워드5"],"category":"tech|economy|ai|science|politics|default 중 하나"}
-
-title 규칙:
-- 원문 제목이 제공된 경우 → 그대로 사용 (영어 제목이면 한국어로 번역)
-- 원문 제목이 없는 경우 → 본문 내용을 바탕으로 핵심을 담은 제목 작성
-- 제목은 클릭베이트 없이 기사 내용을 정확히 반영
-
-category 기준: tech=IT/소프트웨어/하드웨어/스타트업, economy=경제/금융/주식/기업, ai=인공지능/머신러닝/LLM, science=과학/의학/우주/환경, politics=정치/사회/법/국제, default=그 외`,
-            },
-            { role: 'user', content: prompt },
-          ],
-        }),
-      });
-    } catch (e) {
-      return json({ error: 'OpenAI 연결 실패: ' + e.message }, 500);
-    }
-
-    if (!aiRes.ok) {
-      const errText = await aiRes.text();
-      return json({ error: 'OpenAI ' + aiRes.status + ': ' + errText }, 500);
-    }
-
-    let parsed = {};
-    try {
-      const aiData = await aiRes.json();
-      const content = aiData.choices?.[0]?.message?.content || '{}';
-      parsed = JSON.parse(content);
-    } catch (e) {
-      return json({ error: 'OpenAI 응답 파싱 실패: ' + e.message }, 500);
-    }
-
-    return json({
-      title:    parsed.title    || fetchedTitle || '',
-      summary:  parsed.summary  || '',
-      keywords: Array.isArray(parsed.keywords) ? parsed.keywords : [],
-      category: parsed.category || 'default',
-    }, 200);
+    return json({ error: 'Use POST /preview or POST /analyze' }, 404, request, env);
   },
 };
 
-function json(body, status) {
-  return new Response(JSON.stringify(body), { status: status || 200, headers: corsHeaders() });
+function checkRateLimit(userId, limitPerMinute) {
+  const now = Date.now();
+  const bucket = rateBuckets.get(userId);
+  if (!bucket || now >= bucket.resetAt) {
+    rateBuckets.set(userId, { count: 1, resetAt: now + 60_000 });
+    return true;
+  }
+  if (bucket.count >= limitPerMinute) {
+    return false;
+  }
+  bucket.count += 1;
+  return true;
 }
 
-function corsHeaders() {
-  return {
+async function verifySupabaseUser(token, env) {
+  if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) {
+    return { error: 'Worker is missing SUPABASE_URL or SUPABASE_ANON_KEY', status: 500 };
+  }
+
+  const url = `${env.SUPABASE_URL}/auth/v1/user`;
+  let res;
+  try {
+    res = await fetch(url, {
+      method: 'GET',
+      headers: {
+        apikey: env.SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  } catch (e) {
+    return { error: 'Auth verification failed: ' + e.message, status: 401 };
+  }
+
+  if (!res.ok) {
+    return { error: 'Invalid or expired session', status: 401 };
+  }
+
+  try {
+    const data = await res.json();
+    if (!data?.id) return { error: 'Invalid user payload', status: 401 };
+    return { data };
+  } catch {
+    return { error: 'Invalid auth response', status: 401 };
+  }
+}
+
+async function handlePreview(articleUrl, request, env) {
+  try {
+    const htmlRes = await fetch(articleUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; LinkLensBot/1.0)',
+        Accept: 'text/html',
+      },
+      redirect: 'follow',
+      cf: { timeout: 8000 },
+    });
+
+    if (!htmlRes.ok) {
+      return json({ title: '', source: getSource(articleUrl) }, 200, request, env);
+    }
+
+    const html = await htmlRes.text();
+    const title = extractTitleFromHtml(html);
+    return json({ title, source: getSource(articleUrl) }, 200, request, env);
+  } catch {
+    return json({ title: '', source: getSource(articleUrl) }, 200, request, env);
+  }
+}
+
+async function handleAnalyze(articleUrl, apiKey, request, env) {
+  let rawText = '';
+  let fetchedTitle = '';
+
+  const [htmlRes, jinaRes] = await Promise.allSettled([
+    fetch(articleUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; LinkLensBot/1.0)',
+        Accept: 'text/html',
+      },
+      redirect: 'follow',
+      cf: { timeout: 8000 },
+    }),
+    fetch('https://r.jina.ai/' + articleUrl, {
+      headers: { Accept: 'text/plain', 'X-Return-Format': 'markdown' },
+    }),
+  ]);
+
+  if (htmlRes.status === 'fulfilled' && htmlRes.value.ok) {
+    try {
+      const html = await htmlRes.value.text();
+      fetchedTitle = extractTitleFromHtml(html);
+    } catch {}
+  }
+
+  if (jinaRes.status === 'fulfilled' && jinaRes.value.ok) {
+    try {
+      const text = await jinaRes.value.text();
+      if (!fetchedTitle) {
+        const m = text.match(/^Title:\s*(.+)$/m);
+        if (m) fetchedTitle = m[1].trim();
+      }
+      rawText = text
+        .replace(/^(Title|URL|Published Time|Description|Markdown Content):.*$/gm, '')
+        .replace(/!\[.*?\]\(.*?\)/g, '')
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+        .replace(/```[\s\S]*?```/g, '')
+        .replace(/#{1,6}\s+/g, '')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim()
+        .slice(0, 3000);
+    } catch {}
+  }
+
+  const titleHint = fetchedTitle ? `원문 제목: "${fetchedTitle}"\n\n` : '';
+  const prompt = rawText
+    ? `${titleHint}다음 기사를 분석해주세요.\n\n${rawText}`
+    : `다음 URL의 기사를 분석해주세요: ${articleUrl}`;
+
+  let aiRes;
+  try {
+    aiRes = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + apiKey,
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        temperature: 0.3,
+        max_tokens: 600,
+        response_format: { type: 'json_object' },
+        messages: [
+          {
+            role: 'system',
+            content:
+              '반드시 JSON 객체만 반환하세요. 키: title, summary, keywords, category. category는 tech|economy|ai|science|politics|default 중 하나.',
+          },
+          { role: 'user', content: prompt },
+        ],
+      }),
+    });
+  } catch (e) {
+    return json({ error: 'OpenAI connection failed: ' + e.message }, 500, request, env);
+  }
+
+  if (!aiRes.ok) {
+    const errText = await aiRes.text();
+    return json({ error: 'OpenAI ' + aiRes.status + ': ' + errText }, 500, request, env);
+  }
+
+  let parsed = {};
+  try {
+    const aiData = await aiRes.json();
+    const content = aiData.choices?.[0]?.message?.content || '{}';
+    parsed = JSON.parse(content);
+  } catch (e) {
+    return json({ error: 'OpenAI response parse failed: ' + e.message }, 500, request, env);
+  }
+
+  return json(
+    {
+      title: parsed.title || fetchedTitle || '',
+      summary: parsed.summary || '',
+      keywords: Array.isArray(parsed.keywords) ? parsed.keywords : [],
+      category: parsed.category || 'default',
+    },
+    200,
+    request,
+    env,
+  );
+}
+
+function extractTitleFromHtml(html) {
+  const ogTitle =
+    html.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i) ||
+    html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:title["']/i);
+  const plainTitle = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+
+  let title = (ogTitle?.[1] || plainTitle?.[1] || '').trim();
+  title = title.replace(/\s*[\|\-·:]\s*[^|\-·:]{2,40}$/, '').trim() || title;
+  return title;
+}
+
+function getSource(articleUrl) {
+  try {
+    return new URL(articleUrl).hostname.replace('www.', '');
+  } catch {
+    return '';
+  }
+}
+
+function json(body, status = 200, request, env) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: corsHeaders(request?.headers.get('Origin') || '', env),
+  });
+}
+
+function parseAllowedOrigins(env) {
+  return String(env.ALLOWED_ORIGINS || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+function isOriginAllowed(origin, env) {
+  const allowed = parseAllowedOrigins(env);
+  if (!allowed.length) return true;
+  return !!origin && allowed.includes(origin);
+}
+
+function resolveAllowOrigin(origin, env) {
+  const allowed = parseAllowedOrigins(env);
+  if (!allowed.length) return '*';
+  if (origin && allowed.includes(origin)) return origin;
+  return '';
+}
+
+function corsHeaders(origin, env) {
+  const allowOrigin = resolveAllowOrigin(origin, env);
+  const headers = {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   };
+  if (allowOrigin) headers['Access-Control-Allow-Origin'] = allowOrigin;
+  if (allowOrigin !== '*') headers.Vary = 'Origin';
+  return headers;
 }

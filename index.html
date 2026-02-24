@@ -1,13 +1,16 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="LL_SUPABASE_URL" content="https://kqldruenkpkcravnnsxd.supabase.co">
+<meta name="LL_SUPABASE_KEY" content="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxbGRydWVua3BrY3Jhdm5uc3hkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NzA0NDUsImV4cCI6MjA4NzQ0NjQ0NX0.AeU-LbWDdnj1pjNU5YFUoDD7Ara0gb241icND70mxr4">
+<meta name="LL_WORKER_BASE_URL" content="https://linklens-ai.lame26.workers.dev">
 <title>LinkLens</title>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-/* ── TOKENS ── */
+/* TOKENS */
 :root {
   --bg: #0a0a0b;
   --bg2: #111113;
@@ -54,7 +57,7 @@
   --shadow-lg: 0 4px 6px rgba(0,0,0,0.1), 0 20px 50px rgba(0,0,0,0.1);
 }
 
-/* ── RESET ── */
+/* RESET */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { height: 100%; }
 body {
@@ -74,7 +77,7 @@ a { text-decoration: none; color: inherit; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
 
-/* ── SIDEBAR ── */
+/* SIDEBAR */
 .sidebar {
   width: 232px;
   min-height: 100vh;
@@ -221,7 +224,7 @@ a { text-decoration: none; color: inherit; }
 .plan-bar-bg { height: 3px; background: var(--surface3); border-radius: 2px; overflow: hidden; }
 .plan-bar { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.4s; }
 
-/* ── MAIN ── */
+/* MAIN */
 .main {
   margin-left: 232px;
   flex: 1;
@@ -230,7 +233,7 @@ a { text-decoration: none; color: inherit; }
   min-height: 100vh;
 }
 
-/* ── TOPBAR ── */
+/* TOPBAR */
 .topbar {
   position: sticky; top: 0;
   z-index: 50;
@@ -316,10 +319,10 @@ a { text-decoration: none; color: inherit; }
 .icon-btn.active { background: var(--accent-dim); color: var(--accent); border-color: var(--accent-border); }
 .icon-btn svg { width: 15px; height: 15px; }
 
-/* ── CONTENT ── */
+/* CONTENT */
 .content { padding: 20px 24px; flex: 1; }
 
-/* ── STATS ── */
+/* STATS */
 .stats {
   display: grid;
   grid-template-columns: repeat(4,1fr);
@@ -345,7 +348,7 @@ a { text-decoration: none; color: inherit; }
 .stat-num { font-size: 26px; font-weight: 700; letter-spacing: -1px; margin-bottom: 2px; }
 .stat-lbl { font-size: 11px; color: var(--text3); font-weight: 500; }
 
-/* ── TOOLBAR ── */
+/* TOOLBAR */
 .toolbar {
   display: flex;
   align-items: center;
@@ -369,7 +372,7 @@ a { text-decoration: none; color: inherit; }
 .sep { width: 1px; height: 18px; background: var(--border); }
 .toolbar-right { margin-left: auto; display: flex; gap: 4px; }
 
-/* ── GRID / LIST ── */
+/* GRID / LIST */
 .grid-view {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -377,7 +380,7 @@ a { text-decoration: none; color: inherit; }
 }
 .list-view { display: flex; flex-direction: column; gap: 8px; }
 
-/* ── CARD ── */
+/* CARD */
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -490,7 +493,7 @@ a { text-decoration: none; color: inherit; }
 .sm-btn.starred { color: var(--amber); }
 .sm-btn.trash:hover { background: var(--red-dim); color: var(--red); }
 
-/* ── LIST ITEM ── */
+/* LIST ITEM */
 .list-item {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -519,7 +522,7 @@ a { text-decoration: none; color: inherit; }
 .list-summary { font-size: 12px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .list-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
 
-/* ── EMPTY ── */
+/* EMPTY */
 .empty {
   grid-column: 1/-1;
   display: flex;
@@ -534,7 +537,7 @@ a { text-decoration: none; color: inherit; }
 .empty-title { font-family: 'Instrument Serif', serif; font-size: 18px; color: var(--text2); }
 .empty-desc { font-size: 13px; line-height: 1.6; max-width: 300px; }
 
-/* ── MODAL ── */
+/* MODAL */
 .overlay {
   position: fixed; inset: 0;
   background: rgba(0,0,0,0.65);
@@ -687,7 +690,7 @@ a { text-decoration: none; color: inherit; }
 }
 .btn-ghost:hover { background: var(--surface3); color: var(--text); }
 
-/* ── DETAIL PANEL ── */
+/* DETAIL PANEL */
 .panel-overlay {
   position: fixed; inset: 0;
   background: rgba(0,0,0,0.4);
@@ -884,7 +887,7 @@ a { text-decoration: none; color: inherit; }
 .btn-del svg { width: 13px; height: 13px; }
 .btn-del:hover { background: var(--red-dim); color: var(--red); border-color: var(--red); }
 
-/* ── TRASH VIEW ── */
+/* TRASH VIEW */
 .trash-note {
   background: var(--red-dim);
   border: 1px solid rgba(248,113,113,0.2);
@@ -913,7 +916,7 @@ a { text-decoration: none; color: inherit; }
 }
 .btn-empty-trash:hover { background: var(--red); color: #fff; }
 
-/* ── COLLECTION MODAL ── */
+/* COLLECTION MODAL */
 .color-picker { display: flex; gap: 6px; flex-wrap: wrap; }
 .color-swatch {
   width: 22px; height: 22px;
@@ -925,7 +928,7 @@ a { text-decoration: none; color: inherit; }
 .color-swatch:hover { transform: scale(1.15); }
 .color-swatch.selected { border-color: var(--text); }
 
-/* ── TOAST ── */
+/* TOAST */
 .toast {
   position: fixed;
   bottom: 20px; right: 20px;
@@ -949,7 +952,7 @@ a { text-decoration: none; color: inherit; }
 .toast.err .toast-dot { background: var(--red); }
 .toast.info .toast-dot { background: var(--blue); }
 
-/* ── AUTH SCREEN ── */
+/* AUTH SCREEN */
 .auth-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9000;}
 .auth-box{width:400px;max-width:92vw;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r-lg);padding:36px 32px;box-shadow:var(--shadow-lg);}
 .auth-logo{display:flex;align-items:center;gap:10px;margin-bottom:28px;}
@@ -983,7 +986,7 @@ a { text-decoration: none; color: inherit; }
 .dropdown-btn:hover{background:var(--surface2);color:var(--text);}
 .dropdown-btn.danger:hover{background:var(--red-dim);color:var(--red);}
 .dropdown-btn svg{width:14px;height:14px;}
-/* ── LOADING BAR ── */
+/* LOADING BAR */
 .loading-bar {
   position: fixed; top: 0; left: 0; right: 0;
   height: 2px;
@@ -1001,7 +1004,7 @@ a { text-decoration: none; color: inherit; }
 <body>
 
 <div class="loading-bar" id="loadingBar"></div>
-<!-- ── AUTH SCREEN ── -->
+<!-- AUTH SCREEN -->
 <div class="auth-screen" id="authScreen">
   <div class="auth-box">
     <div class="auth-logo">
@@ -1013,7 +1016,7 @@ a { text-decoration: none; color: inherit; }
       <span class="auth-logo-name">LinkLens</span>
     </div>
     <h2 class="auth-title" id="authTitle">로그인</h2>
-    <p class="auth-desc" id="authDesc">계정에 로그인하여 기사를 관리하세요</p>
+    <p class="auth-desc" id="authDesc">계정으로 로그인하고 저장한 링크를 관리하세요</p>
     <div class="auth-tabs">
       <button class="auth-tab active" id="tabLogin" onclick="switchTab('login')">로그인</button>
       <button class="auth-tab" id="tabSignup" onclick="switchTab('signup')">회원가입</button>
@@ -1034,7 +1037,7 @@ a { text-decoration: none; color: inherit; }
 
 
 
-<!-- ── SIDEBAR ── -->
+<!-- SIDEBAR -->
 <nav class="sidebar">
   <div class="logo">
     <div class="logo-mark">
@@ -1045,7 +1048,7 @@ a { text-decoration: none; color: inherit; }
       </div>
       <span class="logo-name">LinkLens</span>
     </div>
-    <button class="theme-btn" onclick="toggleTheme()" title="테마 전환" id="themeBtn">☀</button>
+    <button class="theme-btn" onclick="toggleTheme()" title="테마 전환" id="themeBtn">☾</button>
   </div>
 
   <div class="sidebar-scroll">
@@ -1058,8 +1061,7 @@ a { text-decoration: none; color: inherit; }
       </button>
       <button class="nav-btn" onclick="setFilter('unread',this)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        미읽음
-        <span class="nav-count" id="nb-unread">0</span>
+        미읽음 <span class="nav-count" id="nb-unread">0</span>
       </button>
       <button class="nav-btn" onclick="setFilter('later',this)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
@@ -1073,8 +1075,7 @@ a { text-decoration: none; color: inherit; }
       </button>
       <button class="nav-btn" onclick="setFilter('trash',this)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-        휴지통
-        <span class="nav-count" id="nb-trash">0</span>
+        휴지통 <span class="nav-count" id="nb-trash">0</span>
       </button>
     </div>
 
@@ -1115,7 +1116,7 @@ a { text-decoration: none; color: inherit; }
   <div class="sidebar-footer">
     <div class="plan-card">
       <div class="plan-row">
-        <span class="plan-label">Free 플랜</span>
+        <span class="plan-label">Free ?뚮옖</span>
         <span class="plan-val" id="planVal">0 / 30</span>
       </div>
       <div class="plan-bar-bg"><div class="plan-bar" id="planBar" style="width:0%"></div></div>
@@ -1123,14 +1124,14 @@ a { text-decoration: none; color: inherit; }
   </div>
 </nav>
 
-<!-- ── MAIN ── -->
+<!-- MAIN -->
 <div class="main">
   <div class="topbar">
     <h1 class="page-title" id="pageTitle">전체 기사</h1>
     <div class="topbar-right">
       <div class="search-box">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <input class="search-input" id="searchInput" placeholder="검색…" oninput="doSearch()" autocomplete="off">
+        <input class="search-input" id="searchInput" placeholder="검색어 입력" oninput="doSearch()" autocomplete="off">
         <span class="kbd">⌘K</span>
       </div>
       
@@ -1164,7 +1165,7 @@ a { text-decoration: none; color: inherit; }
           </div>
         </div>
         <div class="stat-num" id="s-total">0</div>
-        <div class="stat-lbl">총 저장 기사</div>
+        <div class="stat-lbl">전체 기사</div>
       </div>
       <div class="stat">
         <div class="stat-top">
@@ -1182,7 +1183,7 @@ a { text-decoration: none; color: inherit; }
           </div>
         </div>
         <div class="stat-num" id="s-ai">0</div>
-        <div class="stat-lbl">AI 요약 완료</div>
+        <div class="stat-lbl">AI ?붿빟 ?꾨즺</div>
       </div>
       <div class="stat">
         <div class="stat-top">
@@ -1206,7 +1207,7 @@ a { text-decoration: none; color: inherit; }
         <button class="icon-btn active" id="btnGrid" onclick="setView('grid')" title="카드뷰">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
         </button>
-        <button class="icon-btn" id="btnList" onclick="setView('list')" title="리스트뷰">
+        <button class="icon-btn" id="btnList" onclick="setView('list')" title="리스트">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
         </button>
       </div>
@@ -1217,16 +1218,16 @@ a { text-decoration: none; color: inherit; }
   </div>
 </div>
 
-<!-- ── ADD MODAL ── -->
+<!-- ADD MODAL -->
 <div class="overlay" id="addOverlay">
   <div class="modal">
     <div class="modal-head">
       <span class="modal-title">링크 추가</span>
-      <button class="modal-close" onclick="closeAddModal()">✕</button>
+      <button class="modal-close" onclick="closeAddModal()">×</button>
     </div>
     <div class="ai-hint">
       <div class="ai-pulse"></div>
-      AI가 저장 후 자동으로 요약·분류·키워드를 추출합니다
+      AI가 자동으로 제목, 요약, 키워드, 카테고리를 추출합니다
     </div>
     <div class="field">
       <label class="field-label">URL *</label>
@@ -1263,12 +1264,12 @@ a { text-decoration: none; color: inherit; }
     <div class="field">
       <label class="field-label">태그 <span style="color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">(Enter로 추가)</span></label>
       <div class="tag-editor" id="fTagEditor">
-        <input class="tag-add-input" id="fTagInput" placeholder="태그 추가…" onkeydown="addTagKey(event)">
+        <input class="tag-add-input" id="fTagInput" placeholder="태그 추가" onkeydown="addTagKey(event)">
       </div>
     </div>
     <div class="field">
-      <label class="field-label">메모</label>
-      <textarea class="field-textarea" id="fMemo" placeholder="이 기사에 대한 생각을 남겨보세요…"></textarea>
+      <label class="field-label">硫붾え</label>
+      <textarea class="field-textarea" id="fMemo" placeholder="이 기사에 대한 생각이나 메모를 남겨보세요"></textarea>
     </div>
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeAddModal()">취소</button>
@@ -1280,16 +1281,16 @@ a { text-decoration: none; color: inherit; }
   </div>
 </div>
 
-<!-- ── COLLECTION MODAL ── -->
+<!-- COLLECTION MODAL -->
 <div class="overlay" id="colOverlay">
   <div class="modal" style="max-width:380px">
     <div class="modal-head">
-      <span class="modal-title">컬렉션 만들기</span>
-      <button class="modal-close" onclick="closeColModal()">✕</button>
+      <span class="modal-title" id="colModalTitle">컬렉션 만들기</span>
+      <button class="modal-close" onclick="closeColModal()">×</button>
     </div>
     <div class="field">
       <label class="field-label">이름</label>
-      <input class="field-input" id="colName" placeholder="예: AI 연구, 주간 스크랩…">
+      <input class="field-input" id="colName" placeholder="예: AI 연구, 주간 스크랩">
     </div>
     <div class="field">
       <label class="field-label">색상</label>
@@ -1297,29 +1298,22 @@ a { text-decoration: none; color: inherit; }
     </div>
     <div class="modal-actions">
       <button class="btn-ghost" onclick="closeColModal()">취소</button>
-      <button class="btn-primary" onclick="saveCollection()">만들기</button>
+      <button class="btn-primary" id="colSaveBtn" onclick="saveCollection()">만들기</button>
     </div>
   </div>
 </div>
 
-<!-- ── DETAIL PANEL ── -->
 <div class="panel-overlay" id="panelOv" onclick="closePanel()"></div>
 <div class="panel" id="panel">
   <div class="panel-head">
-    <button class="panel-back" onclick="closePanel()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-    </button>
+    <button class="panel-back" onclick="closePanel()">←</button>
     <span class="panel-label">기사 상세</span>
     <div class="panel-head-actions">
-      <button class="icon-btn" id="pStarBtn" onclick="togglePanelStar()" title="즐겨찾기">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-      </button>
+      <button class="icon-btn" id="pStarBtn" onclick="togglePanelStar()" title="즐겨찾기">★</button>
     </div>
   </div>
   <div class="panel-scroll">
-    <div class="panel-thumb" id="pThumb">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-    </div>
+    <div class="panel-thumb" id="pThumb"></div>
     <div class="panel-body">
       <h2 class="panel-title" id="pTitle"></h2>
       <div class="panel-meta">
@@ -1327,40 +1321,31 @@ a { text-decoration: none; color: inherit; }
         <span class="panel-date" id="pDate"></span>
         <span class="tag" id="pCatTag"></span>
       </div>
-
       <div class="ai-box">
-        <div class="ai-box-head">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/></svg>
-          AI 자동 요약
-        </div>
+        <div class="ai-box-head">AI 자동 요약</div>
         <div class="ai-box-text" id="pSummary"></div>
       </div>
-
       <div class="section">
         <div class="section-label">키워드</div>
         <div class="kw-list" id="pKeywords"></div>
       </div>
-
       <div class="section">
         <div class="section-label">태그</div>
         <div class="tag-editor" id="pTagEditor">
-          <input class="tag-add-input" id="pTagInput" placeholder="태그 추가…" onkeydown="addPanelTagKey(event)">
+          <input class="tag-add-input" id="pTagInput" placeholder="태그 추가" onkeydown="addPanelTagKey(event)">
         </div>
       </div>
-
       <div class="section">
         <div class="section-label">컬렉션</div>
         <div class="col-assign" id="pColAssign"></div>
       </div>
-
       <div class="section">
         <div class="section-label">별점</div>
         <div class="stars-row" id="pStars"></div>
       </div>
-
       <div class="section">
         <div class="section-label">메모</div>
-        <textarea class="panel-memo" id="pMemo" placeholder="메모를 입력하세요…" onchange="savePanelMemo()"></textarea>
+        <textarea class="panel-memo" id="pMemo" placeholder="메모를 입력하세요" onchange="savePanelMemo()"></textarea>
       </div>
     </div>
   </div>
@@ -1370,465 +1355,39 @@ a { text-decoration: none; color: inherit; }
       <option value="later">나중에 읽기</option>
       <option value="read">읽음</option>
     </select>
-    <button class="btn-del" onclick="trashFromPanel()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-      삭제
-    </button>
-    <a class="btn-open" id="pLink" href="#" target="_blank">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-      원문 보기
-    </a>
+    <button class="btn-del" onclick="trashFromPanel()">삭제</button>
+    <a class="btn-open" id="pLink" href="#" target="_blank">원문 보기</a>
   </div>
 </div>
 
-<!-- ── TOAST ── -->
+<!-- TOAST -->
 <div class="toast" id="toast">
   <div class="toast-dot"></div>
   <span id="toastMsg"></span>
 </div>
 
-<script>
-// SUPABASE INIT
-const SUPABASE_URL  = 'https://kqldruenkpkcravnnsxd.supabase.co';
-const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxbGRydWVua3BrY3Jhdm5uc3hkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NzA0NDUsImV4cCI6MjA4NzQ0NjQ0NX0.AeU-LbWDdnj1pjNU5YFUoDD7Ara0gb241icND70mxr4';
-// localStorage 차단(Edge Tracking Prevention 등) 대응용 커스텀 스토리지
-// localStorage 사용 가능하면 쓰고, 차단되면 메모리에 저장
-const _memStore = {};
-const _safeStorage = {
-  getItem: (key) => {
-    try { return localStorage.getItem(key); } catch { return _memStore[key] ?? null; }
-  },
-  setItem: (key, value) => {
-    try { localStorage.setItem(key, value); } catch {}
-    _memStore[key] = value;
-  },
-  removeItem: (key) => {
-    try { localStorage.removeItem(key); } catch {}
-    delete _memStore[key];
-  },
-};
+<script type="module" src="./js/app.js"></script>
 
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-  auth: {
-    lock: async (name, acquireTimeout, fn) => { return await fn(); },
-    storageKey: 'll_auth',
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-    storage: _safeStorage,
-  }
-});
-
-// STATE
-let articles=[], collections=[], trash=JSON.parse(localStorage.getItem('ll_trash')||'[]'), currentUser=null;
-let filter='all', catFilter=null, colFilter=null, sortMode='newest', viewMode='grid';
-let unreadOnly=false, searchQ='', selectedId=null, addingTags=[], editingTags=[];
-let theme=localStorage.getItem('ll_theme')||'dark';
-document.documentElement.setAttribute('data-theme',theme);
-document.getElementById('themeBtn').textContent=theme==='dark'?'☀':'☾';
-
-// AUTH
-let authMode='login';
-function switchTab(mode){
-  authMode=mode;
-  document.getElementById('tabLogin').classList.toggle('active',mode==='login');
-  document.getElementById('tabSignup').classList.toggle('active',mode==='signup');
-  document.getElementById('authTitle').textContent=mode==='login'?'로그인':'회원가입';
-  document.getElementById('authDesc').textContent=mode==='login'?'계정에 로그인하여 기사를 관리하세요':'새 계정을 만들어 시작하세요';
-  document.getElementById('authBtn').textContent=mode==='login'?'로그인':'회원가입';
-  hideAuthMsg();
-}
-function authEnter(e){if(e.key==='Enter')doAuth();}
-function showAuthErr(msg){const el=document.getElementById('authErr');el.textContent=msg;el.className='auth-msg err show';document.getElementById('authOk').className='auth-msg ok';}
-function showAuthOk(msg){const el=document.getElementById('authOk');el.textContent=msg;el.className='auth-msg ok show';document.getElementById('authErr').className='auth-msg err';}
-function hideAuthMsg(){document.getElementById('authErr').className='auth-msg err';document.getElementById('authOk').className='auth-msg ok';}
-async function doAuth(){
-  const email=document.getElementById('authEmail').value.trim();
-  const pass=document.getElementById('authPass').value;
-  if(!email||!pass){showAuthErr('이메일과 비밀번호를 입력해주세요');return;}
-  const btn=document.getElementById('authBtn');
-  btn.disabled=true; btn.textContent='처리 중...'; hideAuthMsg();
-  try{
-    if(authMode==='login'){
-      const{error}=await sb.auth.signInWithPassword({email,password:pass});
-      if(error)throw error;
-    }else{
-      const{error}=await sb.auth.signUp({email,password:pass});
-      if(error)throw error;
-      showAuthOk('가입 완료! 로그인해보세요.');
-      btn.disabled=false; btn.textContent='회원가입'; return;
-    }
-  }catch(e){
-    const msgs={'Invalid login credentials':'이메일 또는 비밀번호가 올바르지 않습니다','User already registered':'이미 가입된 이메일입니다','Password should be at least 6 characters':'비밀번호는 6자 이상이어야 합니다'};
-    showAuthErr(msgs[e.message]||e.message);
-    btn.disabled=false; btn.textContent=authMode==='login'?'로그인':'회원가입';
-  }
-}
-async function doSignOut(){
-  document.getElementById('userDropdown').classList.remove('open');
-  _signedOut = true;   // 이후 모든 auth 이벤트 차단
-  _initialized = false;
-
-  // 스토리지 전체 초기화 (세션 키 포함)
-  try{
-    Object.keys(localStorage).forEach(k=>{
-      if(k.startsWith('sb-')||k.startsWith('supabase')||k==='ll_auth'||k.startsWith('ll_'))
-        localStorage.removeItem(k);
-    });
-  }catch{}
-  try{ Object.keys(_memStore).forEach(k=>delete _memStore[k]); }catch{}
-
-  // UI 즉시 전환
-  currentUser=null; articles=[]; collections=[];
-  document.getElementById('authScreen').style.display='flex';
-  refresh();
-  toast('로그아웃되었습니다','info');
-
-  // 서버 세션 파기 (silent)
-  try{ await sb.auth.signOut({scope:'local'}); }catch{}
-}
-function toggleUserMenu(){document.getElementById('userDropdown').classList.toggle('open');}
-document.addEventListener('click',e=>{if(!e.target.closest('.user-btn'))document.getElementById('userDropdown').classList.remove('open');});
-
-// DB HELPERS
-async function loadFromDB(){
-  const[{data:arts},{data:cols}]=await Promise.all([
-    sb.from('articles').select('*').order('created_at',{ascending:false}),
-    sb.from('collections').select('*').order('created_at',{ascending:true})
-  ]);
-  articles=(arts||[]).map(r=>({id:r.id,url:r.url,title:r.title||'',source:r.source||'',category:r.category||'default',summary:r.summary||'',keywords:r.keywords||[],tags:r.tags||[],status:r.status||'unread',starred:r.starred||false,rating:r.rating||0,memo:r.memo||'',collections:r.collections||[],date:r.date||r.created_at?.split('T')[0]||''}));
-  collections=(cols||[]).map(r=>({id:r.id,name:r.name,color:r.color||'#a78bfa'}));
-  refresh();
-}
-function toDB(a){return{user_id:currentUser.id,url:a.url,title:a.title,source:a.source,category:a.category,summary:a.summary,keywords:a.keywords,tags:a.tags,status:a.status,starred:a.starred,rating:a.rating,memo:a.memo,collections:a.collections,date:a.date};}
-async function dbIns(a){
-  const{data,error}=await sb.from('articles').insert(toDB(a)).select().single();
-  if(error) throw new Error(error.message+' (code:'+error.code+')');
-  if(!data) throw new Error('저장 실패 - Supabase 응답 없음');
-  return data.id;
-}
-async function dbUpd(id,f){await sb.from('articles').update(f).eq('id',id);}
-async function dbDel(id){await sb.from('articles').delete().eq('id',id);}
-async function dbInsCol(c){const{data,error}=await sb.from('collections').insert({user_id:currentUser.id,name:c.name,color:c.color}).select().single();if(error)throw error;return data.id;}
-
-// ── AI WORKER ──
-// Worker 배포 후 아래 URL을 본인 Worker URL로 변경하세요
-const WORKER_URL = 'https://linklens-ai.lame26.workers.dev/analyze';
-
-function getDomain(url){try{return new URL(url).hostname.replace('www.','');}catch{return '';}}
-function today(){return new Date().toISOString().split('T')[0];}
-
-// Worker 호출: URL → { title, summary, keywords, category }
-async function analyzeWithAI(url){
-  const ctrl = new AbortController();
-  const tid = setTimeout(() => ctrl.abort(), 25000);
-  try {
-    const res = await fetch(WORKER_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url }),
-      signal: ctrl.signal,
-    });
-    if (!res.ok) throw new Error('Worker ' + res.status);
-    return await res.json();
-  } finally {
-    clearTimeout(tid);
-  }
-}
-
-// URL 입력 시 AI로 제목·카테고리 자동 미리보기 (디바운스 1.5초)
-let urlDebounce = null;
-let urlAbortCtrl = null; // 진행 중인 Worker fetch 취소용
-
-function cancelUrlAnalysis(){
-  clearTimeout(urlDebounce);
-  if(urlAbortCtrl){ urlAbortCtrl.abort(); urlAbortCtrl=null; }
-}
-
-async function onUrlInput(){
-  const url = document.getElementById('fUrl').value.trim();
-  const titleEl = document.getElementById('fTitle');
-  cancelUrlAnalysis();
-  if (!url || titleEl.dataset.manualEdit === '1') return;
-  try { new URL(url); } catch { return; }
-  urlDebounce = setTimeout(async () => {
-    titleEl.placeholder = 'AI 분석 중…';
-    urlAbortCtrl = new AbortController();
-    try {
-      const res = await fetch(WORKER_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url }),
-        signal: urlAbortCtrl.signal,
-      });
-      if(!res.ok) throw new Error('Worker '+res.status);
-      const result = await res.json();
-      if (result.title && document.getElementById('fTitle').dataset.manualEdit !== '1') {
-        document.getElementById('fTitle').value = result.title;
-      }
-      if (result.category) document.getElementById('fCat').value = result.category;
-    } catch(e) {
-      if(e.name !== 'AbortError') console.warn('미리보기 실패:', e.message);
-    } finally {
-      urlAbortCtrl = null;
-      titleEl.placeholder = '기사 제목을 입력하거나 자동 감지됩니다';
-    }
-  }, 1500);
-}
-
-// REFRESH
-function refresh(){renderSidebadges();renderCollectionList();renderArticles();updateStats();updatePlanBar();}
-function renderSidebadges(){
-  const set=(id,n)=>{const el=document.getElementById(id);if(el)el.textContent=n;};
-  set('nb-all',articles.length);set('nb-unread',articles.filter(a=>a.status==='unread').length);
-  set('nb-later',articles.filter(a=>a.status==='later').length);set('nb-starred',articles.filter(a=>a.starred).length);
-  set('nb-trash',trash.length);set('nb-tech',articles.filter(a=>a.category==='tech').length);
-  set('nb-economy',articles.filter(a=>a.category==='economy').length);set('nb-ai',articles.filter(a=>a.category==='ai').length);
-  set('nb-science',articles.filter(a=>a.category==='science').length);set('nb-politics',articles.filter(a=>a.category==='politics').length);
-}
-function updateStats(){
-  document.getElementById('s-total').textContent=articles.length;
-  document.getElementById('s-unread').textContent=articles.filter(a=>a.status==='unread').length;
-  document.getElementById('s-ai').textContent=articles.filter(a=>a.summary).length;
-  document.getElementById('s-starred').textContent=articles.filter(a=>a.starred).length;
-}
-function updatePlanBar(){const n=articles.length;document.getElementById('planVal').textContent=`${n} / 무제한`;document.getElementById('planBar').style.width=Math.min(100,(n/50)*100)+'%';}
-const COL_COLORS=['#a78bfa','#60a5fa','#34d399','#fbbf24','#f87171','#fb923c','#e879f9','#a3e635'];
-function renderCollectionList(){
-  const wrap=document.getElementById('colList');if(!wrap)return;
-  if(collections.length===0){wrap.innerHTML='';return;}
-  wrap.innerHTML=collections.map(c=>{const cnt=articles.filter(a=>a.collections&&a.collections.includes(c.id)).length;const active=colFilter===c.id?'active':'';return`<button class="col-btn ${active}" onclick="setColFilter(${c.id},this)"><div class="col-dot" style="background:${c.color}"></div><span class="col-name">${c.name}</span><span class="col-count">${cnt}</span></button>`;}).join('');
-}
-
-// FILTERS
-function setFilter(f,el){filter=f;catFilter=null;colFilter=null;document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));if(el)el.classList.add('active');const t={all:'전체 기사',unread:'미읽음',later:'나중에 읽기',starred:'즐겨찾기',trash:'휴지통'};document.getElementById('pageTitle').textContent=t[f]||f;renderArticles();}
-function setCat(cat,el){filter='all';catFilter=cat;colFilter=null;document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));if(el)el.classList.add('active');const l={tech:'테크/IT',economy:'경제/금융',ai:'AI/미래',science:'과학',politics:'정치/사회'};document.getElementById('pageTitle').textContent=l[cat]||cat;renderArticles();}
-function setColFilter(id,el){filter='all';catFilter=null;colFilter=id;document.querySelectorAll('.nav-btn,.col-btn').forEach(b=>b.classList.remove('active'));if(el)el.classList.add('active');const col=collections.find(c=>c.id===id);document.getElementById('pageTitle').textContent=col?col.name:'컬렉션';renderArticles();}
-function setSort(s,el){sortMode=s;document.querySelectorAll('.chip').forEach(c=>{if(['최신순','오래된순','별점순'].includes(c.textContent.trim()))c.classList.remove('active');});if(el)el.classList.add('active');renderArticles();}
-function toggleUnread(el){unreadOnly=!unreadOnly;el.classList.toggle('active',unreadOnly);renderArticles();}
-function setView(v){viewMode=v;document.getElementById('btnGrid').classList.toggle('active',v==='grid');document.getElementById('btnList').classList.toggle('active',v==='list');renderArticles();}
-function doSearch(){searchQ=document.getElementById('searchInput').value;renderArticles();}
-function getList(){
-  if(filter==='trash')return[...trash].sort((a,b)=>b.id-a.id);
-  let list=[...articles];
-  if(filter==='unread')list=list.filter(a=>a.status==='unread');else if(filter==='later')list=list.filter(a=>a.status==='later');else if(filter==='starred')list=list.filter(a=>a.starred);
-  if(catFilter)list=list.filter(a=>a.category===catFilter);
-  if(colFilter!==null)list=list.filter(a=>a.collections&&a.collections.includes(colFilter));
-  if(unreadOnly)list=list.filter(a=>a.status==='unread');
-  if(searchQ){const q=searchQ.toLowerCase();list=list.filter(a=>a.title.toLowerCase().includes(q)||(a.summary||'').toLowerCase().includes(q)||(a.keywords||[]).some(k=>k.toLowerCase().includes(q))||(a.tags||[]).some(t=>t.toLowerCase().includes(q))||(a.source||'').toLowerCase().includes(q));}
-  if(sortMode==='newest')list.sort((a,b)=>b.id-a.id);else if(sortMode==='oldest')list.sort((a,b)=>a.id-b.id);else if(sortMode==='rating')list.sort((a,b)=>(b.rating||0)-(a.rating||0));
-  return list;
-}
-
-// RENDER
-const CAT_TAG_CLASS={tech:'tag-tech',economy:'tag-economy',ai:'tag-ai',science:'tag-science',politics:'tag-politics',default:'tag-default'};
-const CAT_LABEL={tech:'테크/IT',economy:'경제/금융',ai:'AI/미래',science:'과학',politics:'정치/사회',default:'기타'};
-const STATUS_CLASS={unread:'status-unread',read:'status-read',later:'status-later'};
-const STATUS_LABEL={unread:'미읽음',read:'읽음',later:'나중에'};
-const SVG={star:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,starFill:`<svg viewBox="0 0 24 24" fill="var(--amber)" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,trash:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>`,restore:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>`,link:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`};
-
-function renderArticles(){
-  const wrap=document.getElementById('articlesWrap');wrap.className=viewMode==='grid'?'grid-view':'list-view';
-  const list=getList();let trashBar='';
-  if(filter==='trash'&&trash.length>0)trashBar=`<div class="trash-note" style="grid-column:1/-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>휴지통의 기사는 30일 후 자동 삭제됩니다.<button class="btn-empty-trash" onclick="emptyTrash()">전체 비우기</button></div>`;
-  if(list.length===0){const em=filter==='trash'?'휴지통이 비어있습니다':'저장된 기사가 없습니다';const ed=filter==='trash'?'삭제한 기사가 여기에 보관됩니다':'"링크 추가" 버튼으로 기사를 저장해보세요';wrap.innerHTML=`${trashBar}<div class="empty" style="grid-column:1/-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg><div class="empty-title">${em}</div><div class="empty-desc">${ed}</div></div>`;return;}
-  wrap.innerHTML=trashBar+list.map(a=>viewMode==='grid'?cardHTML(a):listHTML(a)).join('');
-}
-function cardHTML(a){
-  const it=filter==='trash';const tc=CAT_TAG_CLASS[a.category]||'tag-default';const cl=CAT_LABEL[a.category]||'기타';const sc=STATUS_CLASS[a.status]||'status-read';const sl=STATUS_LABEL[a.status]||'';
-  const ut=(a.tags||[]).slice(0,2).map(t=>`<span class="tag tag-default">#${t}</span>`).join('');
-  const ta=it?`<button class="sm-btn" onclick="event.stopPropagation();restoreFromTrash(${a.id})" title="복원">${SVG.restore}</button><button class="sm-btn trash" onclick="event.stopPropagation();deleteForever(${a.id})">${SVG.trash}</button>`:`<button class="sm-btn ${a.starred?'starred':''}" onclick="event.stopPropagation();toggleStar(${a.id})">${a.starred?SVG.starFill:SVG.star}</button><button class="sm-btn trash" onclick="event.stopPropagation();moveToTrash(${a.id})">${SVG.trash}</button>`;
-  return`<div class="card" onclick="${it?'':('openPanel('+a.id+')')}" ${it?'style="cursor:default"':''}>${a.status==='unread'&&!it?'<div class="card-unread-dot"></div>':''}<div class="card-thumb"><div class="card-thumb-placeholder">${SVG.link}</div></div><div class="card-body"><div class="card-meta"><span class="card-source">${a.source||''}</span><span class="card-date">${a.date||''}</span></div><div class="card-title">${a.title}</div><div class="card-summary">${a.summary||'요약 없음'}</div><div class="card-tags"><span class="tag ${tc}">${cl}</span>${ut}</div><div class="card-footer"><div class="card-actions">${ta}</div>${!it?`<span class="status-pill ${sc}">${sl}</span>`:''}</div></div></div>`;
-}
-function listHTML(a){
-  const it=filter==='trash';const tc=CAT_TAG_CLASS[a.category]||'tag-default';const cl=CAT_LABEL[a.category]||'기타';const sc=STATUS_CLASS[a.status]||'status-read';const sl=STATUS_LABEL[a.status]||'';
-  const ta=it?`<button class="sm-btn" onclick="event.stopPropagation();restoreFromTrash(${a.id})">${SVG.restore}</button><button class="sm-btn trash" onclick="event.stopPropagation();deleteForever(${a.id})">${SVG.trash}</button>`:`<button class="sm-btn ${a.starred?'starred':''}" onclick="event.stopPropagation();toggleStar(${a.id})">${a.starred?SVG.starFill:SVG.star}</button><button class="sm-btn trash" onclick="event.stopPropagation();moveToTrash(${a.id})">${SVG.trash}</button>`;
-  return`<div class="list-item" onclick="${it?'':('openPanel('+a.id+')')}" ${it?'style="cursor:default"':''}><div class="list-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div><div class="list-body"><div class="list-title">${a.title}</div><div class="list-sub"><span class="card-source">${a.source||''}</span><span class="card-date">${a.date||''}</span><span class="tag ${tc}">${cl}</span></div><div class="list-summary">${a.summary||''}</div></div><div class="list-right">${!it?`<span class="status-pill ${sc}">${sl}</span>`:''}<div class="card-actions">${ta}</div></div></div>`;
-}
-
-// ADD MODAL
-function openAddModal(){addingTags=[];renderAddTags();document.getElementById('fUrl').value='';const ft=document.getElementById('fTitle');ft.value='';ft.dataset.manualEdit='0';ft.placeholder='기사 제목을 입력하거나 자동 감지됩니다';document.getElementById('fMemo').value='';document.getElementById('fCat').value='tech';document.getElementById('fStatus').value='unread';document.getElementById('addOverlay').classList.add('open');setTimeout(()=>document.getElementById('fUrl').focus(),100);}
-function closeAddModal(){document.getElementById('addOverlay').classList.remove('open');}
-async function doPaste(){try{const t=await navigator.clipboard.readText();document.getElementById('fUrl').value=t;}catch{toast('클립보드 접근 권한이 필요합니다','err');}}
-function renderAddTags(){const editor=document.getElementById('fTagEditor');const input=document.getElementById('fTagInput');editor.innerHTML='';addingTags.forEach((t,i)=>{const span=document.createElement('div');span.className='tag-editable';span.innerHTML=`<span>${t}</span><button onclick="removeAddTag(${i})">✕</button>`;editor.appendChild(span);});editor.appendChild(input);input.value='';}
-function addTagKey(e){if(e.key==='Enter'||e.key===','){e.preventDefault();const val=e.target.value.trim().replace(/^#/,'');if(val&&!addingTags.includes(val)){addingTags.push(val);renderAddTags();}e.target.value='';}}
-function removeAddTag(i){addingTags.splice(i,1);renderAddTags();}
-async function saveArticle(){
-  const url=document.getElementById('fUrl').value.trim();
-  if(!url){toast('URL을 입력해주세요','err');return;}
-  try{new URL(url);}catch{toast('올바른 URL을 입력해주세요','err');return;}
-
-  // 진행 중인 미리보기 fetch 완전 취소
-  cancelUrlAnalysis();
-
-  const btn=document.querySelector('#addOverlay .btn-primary');
-  const btnOriginal=btn.innerHTML;
-  const SPIN=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;animation:spin 0.8s linear infinite"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg>`;
-
-  btn.disabled=true;
-  btn.innerHTML=SPIN+' 저장 중…';
-  startLoading();
-
-  const cat=document.getElementById('fCat').value;
-  const status=document.getElementById('fStatus').value;
-  const memo=document.getElementById('fMemo').value;
-  const titleInp=document.getElementById('fTitle').value.trim();
-
-  const a={
-    url, category:cat, status, memo,
-    title: titleInp||getDomain(url)||url,
-    source: getDomain(url),
-    summary: '', keywords: [],
-    tags: [...addingTags],
-    date: today(), starred:false, rating:0, collections:[]
-  };
-
-  // 1단계: 즉시 DB 저장
-  let savedId=null;
-  try{
-    savedId=await dbIns(a);
-  }catch(e){
-    console.error('dbIns 실패:', e);
-    toast('저장 실패: '+e.message, 'err');
-    stopLoading(); btn.disabled=false; btn.innerHTML=btnOriginal;
-    return;
-  }
-
-  // 저장 성공 → UI 즉시 업데이트
-  a.id=savedId; articles.unshift(a);
-  refresh(); closeAddModal(); stopLoading();
-  btn.disabled=false; btn.innerHTML=btnOriginal;
-  toast('저장됐습니다! AI 분석 중…','ok');
-
-  // 2단계: 백그라운드 AI 분석
-  try{
-    const result=await analyzeWithAI(url);
-    const finalTitle=titleInp||result.title||getDomain(url)||url;
-    const updates={
-      title:finalTitle,
-      summary:result.summary||'',
-      keywords:result.keywords||[],
-      category:result.category||cat,
-    };
-    await dbUpd(savedId, updates);
-    const art=articles.find(x=>x.id===savedId);
-    if(art){ Object.assign(art, updates); }
-    refresh();
-    toast('AI 분석 완료 ✓','ok');
-  }catch(e){
-    console.warn('AI 분석 실패:', e.message);
-  }
-}
-
-// COLLECTION MODAL
-function renderColorPicker(){const cp=document.getElementById('colorPicker');if(!cp)return;cp.innerHTML=COL_COLORS.map((c,i)=>`<div class="color-swatch ${i===0?'selected':''}" style="background:${c}" data-color="${c}" onclick="selectColor(this)"></div>`).join('');}
-function selectColor(el){document.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('selected'));el.classList.add('selected');}
-function openColModal(){renderColorPicker();document.getElementById('colName').value='';document.getElementById('colOverlay').classList.add('open');setTimeout(()=>document.getElementById('colName').focus(),100);}
-function closeColModal(){document.getElementById('colOverlay').classList.remove('open');}
-async function saveCollection(){
-  const name=document.getElementById('colName').value.trim();if(!name){toast('컬렉션 이름을 입력해주세요','err');return;}
-  const sel=document.querySelector('.color-swatch.selected');const color=sel?sel.dataset.color:COL_COLORS[0];
-  try{const newId=await dbInsCol({name,color});collections.push({id:newId,name,color});refresh();closeColModal();toast(`컬렉션 "${name}" 만들어졌습니다`,'ok');}
-  catch(e){toast('컬렉션 생성 실패: '+e.message,'err');}
-}
-
-// DETAIL PANEL
-function openPanel(id){
-  const a=articles.find(x=>x.id===id);if(!a)return;selectedId=id;
-  document.getElementById('pThumb').innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`;
-  document.getElementById('pTitle').textContent=a.title;document.getElementById('pSource').textContent=a.source||'';document.getElementById('pDate').textContent=a.date||'';document.getElementById('pSummary').textContent=a.summary||'요약 없음';document.getElementById('pMemo').value=a.memo||'';document.getElementById('pStatus').value=a.status;document.getElementById('pLink').href=a.url;
-  const ct=document.getElementById('pCatTag');ct.textContent=CAT_LABEL[a.category]||'기타';ct.className=`tag ${CAT_TAG_CLASS[a.category]||'tag-default'}`;
-  const sb2=document.getElementById('pStarBtn');sb2.classList.toggle('active',!!a.starred);sb2.innerHTML=a.starred?SVG.starFill:SVG.star;
-  document.getElementById('pKeywords').innerHTML=(a.keywords||[]).map(k=>`<span class="kw">${k}</span>`).join('');
-  editingTags=[...(a.tags||[])];renderPanelTags();renderColAssign(a);renderPanelStars(a.rating||0);
-  document.getElementById('panel').classList.add('open');document.getElementById('panelOv').classList.add('open');
-  if(a.status==='unread'){a.status='read';dbUpd(a.id,{status:'read'});refresh();}
-}
-function closePanel(){document.getElementById('panel').classList.remove('open');document.getElementById('panelOv').classList.remove('open');selectedId=null;}
-function renderPanelTags(){const editor=document.getElementById('pTagEditor');const input=document.getElementById('pTagInput');editor.innerHTML='';editingTags.forEach((t,i)=>{const div=document.createElement('div');div.className='tag-editable';div.innerHTML=`<span>${t}</span><button onclick="removePanelTag(${i})">✕</button>`;editor.appendChild(div);});editor.appendChild(input);input.value='';}
-function addPanelTagKey(e){if(e.key==='Enter'||e.key===','){e.preventDefault();const val=e.target.value.trim().replace(/^#/,'');if(val&&!editingTags.includes(val)){editingTags.push(val);renderPanelTags();const a=articles.find(x=>x.id===selectedId);if(a){a.tags=editingTags;dbUpd(a.id,{tags:editingTags});}}e.target.value='';}}
-function removePanelTag(i){editingTags.splice(i,1);renderPanelTags();const a=articles.find(x=>x.id===selectedId);if(a){a.tags=editingTags;dbUpd(a.id,{tags:editingTags});}}
-function renderColAssign(a){const wrap=document.getElementById('pColAssign');if(!wrap)return;if(collections.length===0){wrap.innerHTML='<span style="font-size:12px;color:var(--text3)">컬렉션이 없습니다</span>';return;}wrap.innerHTML=collections.map(c=>{const assigned=(a.collections||[]).includes(c.id);return`<button class="col-chip ${assigned?'assigned':''}" onclick="toggleColAssign(${c.id})"><div class="col-chip-dot" style="background:${c.color}"></div>${c.name}</button>`;}).join('');}
-async function toggleColAssign(colId){const a=articles.find(x=>x.id===selectedId);if(!a)return;if(!a.collections)a.collections=[];const idx=a.collections.indexOf(colId);if(idx>=0)a.collections.splice(idx,1);else a.collections.push(colId);await dbUpd(a.id,{collections:a.collections});refresh();renderColAssign(a);}
-function renderPanelStars(r){document.getElementById('pStars').innerHTML=[1,2,3,4,5].map(i=>`<span class="star-btn" onclick="setRating(${i})">${r>=i?'★':'☆'}</span>`).join('');}
-async function setRating(r){const a=articles.find(x=>x.id===selectedId);if(!a)return;a.rating=r;await dbUpd(a.id,{rating:r});refresh();renderPanelStars(r);}
-async function savePanelMemo(){const a=articles.find(x=>x.id===selectedId);if(a){a.memo=document.getElementById('pMemo').value;await dbUpd(a.id,{memo:a.memo});}}
-async function savePanelStatus(){const a=articles.find(x=>x.id===selectedId);if(a){a.status=document.getElementById('pStatus').value;await dbUpd(a.id,{status:a.status});refresh();toast('상태 업데이트됨','info');}}
-async function togglePanelStar(){const a=articles.find(x=>x.id===selectedId);if(!a)return;a.starred=!a.starred;const sb2=document.getElementById('pStarBtn');sb2.classList.toggle('active',a.starred);sb2.innerHTML=a.starred?SVG.starFill:SVG.star;await dbUpd(a.id,{starred:a.starred});refresh();toast(a.starred?'즐겨찾기 추가':'즐겨찾기 해제','info');}
-function trashFromPanel(){if(!confirm('기사를 휴지통으로 이동할까요?'))return;moveToTrash(selectedId);closePanel();}
-
-// ACTIONS
-async function toggleStar(id){const a=articles.find(x=>x.id===id);if(!a)return;a.starred=!a.starred;await dbUpd(id,{starred:a.starred});refresh();toast(a.starred?'즐겨찾기 추가':'즐겨찾기 해제','info');}
-async function moveToTrash(id){const idx=articles.findIndex(a=>a.id===id);if(idx<0)return;const[a]=articles.splice(idx,1);a.trashedAt=Date.now();trash.unshift(a);localStorage.setItem('ll_trash',JSON.stringify(trash));await dbDel(id);refresh();toast('휴지통으로 이동했습니다','info');}
-function restoreFromTrash(id){const idx=trash.findIndex(a=>a.id===id);if(idx<0)return;const[a]=trash.splice(idx,1);delete a.trashedAt;dbIns(a).then(newId=>{a.id=newId;articles.unshift(a);localStorage.setItem('ll_trash',JSON.stringify(trash));refresh();toast('기사가 복원되었습니다','ok');});}
-function deleteForever(id){if(!confirm('이 기사를 영구 삭제할까요?'))return;trash=trash.filter(a=>a.id!==id);localStorage.setItem('ll_trash',JSON.stringify(trash));refresh();toast('영구 삭제되었습니다','info');}
-function emptyTrash(){if(!confirm(`휴지통의 기사 ${trash.length}개를 모두 영구 삭제할까요?`))return;trash=[];localStorage.setItem('ll_trash',JSON.stringify(trash));refresh();toast('휴지통이 비워졌습니다','ok');}
-
-// THEME
-function toggleTheme(){theme=theme==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',theme);document.getElementById('themeBtn').textContent=theme==='dark'?'☀':'☾';localStorage.setItem('ll_theme',theme);}
-
-// LOADING / TOAST
-function startLoading(){const b=document.getElementById('loadingBar');b.classList.remove('done');b.classList.add('go');}
-function stopLoading(){const b=document.getElementById('loadingBar');b.classList.add('done');setTimeout(()=>b.classList.remove('go','done'),300);}
-let toastTimer=null;
-function toast(msg,type='ok'){const el=document.getElementById('toast');el.className=`toast ${type}`;document.getElementById('toastMsg').textContent=msg;el.classList.add('show');if(toastTimer)clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),3000);}
-
-// KEYBOARD
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeAddModal();closeColModal();closePanel();}if((e.metaKey||e.ctrlKey)&&e.key==='k'){e.preventDefault();document.getElementById('searchInput').focus();}});
-
-// INIT
-// 세션 있을 때 UI 업데이트 + DB 로드
-// ── 인증 초기화 ──
-let _signedOut   = false; // 로그아웃 플래그
-let _initialized = false; // INITIAL_SESSION 처리 완료 여부
-
-function _setUser(user){
-  currentUser = user;
-  const email = user.email;
-  document.getElementById('userAvatar').textContent = email[0].toUpperCase();
-  document.getElementById('userEmail').textContent  = email.split('@')[0];
-  document.getElementById('userDropdownEmail').textContent = email;
-  document.getElementById('authScreen').style.display = 'none';
-}
-
-function _clearUser(){
-  currentUser = null; articles = []; collections = [];
-  document.getElementById('authScreen').style.display = 'flex';
-  refresh();
-}
-
-sb.auth.onAuthStateChange(async(event, session)=>{
-  // 로그아웃 진행 중이면 SIGNED_OUT 이외 모든 이벤트 무시
-  if(_signedOut && event !== 'SIGNED_OUT') return;
-
-  if(event === 'SIGNED_OUT'){
-    // doSignOut()이 이미 UI를 처리했으므로 플래그만 리셋
-    _signedOut   = false;
-    _initialized = false;
-    return;
-  }
-
-  if(event === 'INITIAL_SESSION'){
-    // 페이지 첫 로드 — 세션 유무 확정
-    _initialized = true;
-    if(session?.user){ _setUser(session.user); await loadFromDB(); }
-    else              { _clearUser(); }
-    return;
-  }
-
-  if(event === 'SIGNED_IN'){
-    // 실제 로그인 버튼 클릭 후 발화
-    // INITIAL_SESSION 이후 자동으로 한 번 더 발화하는 경우 → 중복 방지
-    if(!session?.user) return;
-    if(_initialized && currentUser?.id === session.user.id) return; // 이미 처리됨
-    _initialized = true;
-    _setUser(session.user);
-    await loadFromDB();
-    return;
-  }
-
-  // TOKEN_REFRESHED, USER_UPDATED 등 — 무시
-});
-</script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
