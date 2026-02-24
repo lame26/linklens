@@ -1,0 +1,1393 @@
+﻿<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="LL_SUPABASE_URL" content="https://kqldruenkpkcravnnsxd.supabase.co">
+<meta name="LL_SUPABASE_KEY" content="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxbGRydWVua3BrY3Jhdm5uc3hkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NzA0NDUsImV4cCI6MjA4NzQ0NjQ0NX0.AeU-LbWDdnj1pjNU5YFUoDD7Ara0gb241icND70mxr4">
+<meta name="LL_WORKER_BASE_URL" content="https://linklens-ai.lame26.workers.dev">
+<title>LinkLens</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+/* TOKENS */
+:root {
+  --bg: #0a0a0b;
+  --bg2: #111113;
+  --surface: #18181b;
+  --surface2: #222227;
+  --surface3: #2a2a31;
+  --border: #2e2e36;
+  --border2: #3a3a45;
+  --text: #f4f4f5;
+  --text2: #a1a1aa;
+  --text3: #71717a;
+  --accent: #a78bfa;
+  --accent-dim: rgba(167,139,250,0.12);
+  --accent-border: rgba(167,139,250,0.25);
+  --green: #34d399;
+  --green-dim: rgba(52,211,153,0.1);
+  --blue: #60a5fa;
+  --blue-dim: rgba(96,165,250,0.1);
+  --amber: #fbbf24;
+  --amber-dim: rgba(251,191,36,0.1);
+  --red: #f87171;
+  --red-dim: rgba(248,113,113,0.1);
+  --r: 10px;
+  --r-sm: 7px;
+  --r-lg: 14px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.2);
+  --shadow-lg: 0 4px 6px rgba(0,0,0,0.5), 0 20px 50px rgba(0,0,0,0.4);
+}
+[data-theme="light"] {
+  --bg: #f8f8fa;
+  --bg2: #f0f0f4;
+  --surface: #ffffff;
+  --surface2: #f4f4f8;
+  --surface3: #ebebf0;
+  --border: #e4e4ec;
+  --border2: #d4d4de;
+  --text: #18181b;
+  --text2: #52525b;
+  --text3: #a1a1aa;
+  --accent: #7c3aed;
+  --accent-dim: rgba(124,58,237,0.08);
+  --accent-border: rgba(124,58,237,0.2);
+  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06);
+  --shadow-lg: 0 4px 6px rgba(0,0,0,0.1), 0 20px 50px rgba(0,0,0,0.1);
+}
+
+/* RESET */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { height: 100%; }
+body {
+  font-family: 'Geist', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  font-size: 14px;
+  line-height: 1.5;
+  transition: background 0.2s, color 0.2s;
+}
+button { font-family: inherit; cursor: pointer; border: none; background: none; }
+input, textarea, select { font-family: inherit; }
+a { text-decoration: none; color: inherit; }
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+/* SIDEBAR */
+.sidebar {
+  width: 232px;
+  min-height: 100vh;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0;
+  z-index: 100;
+  transition: background 0.2s;
+}
+.logo {
+  padding: 20px 16px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.logo-mark {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.logo-icon {
+  width: 28px; height: 28px;
+  background: var(--accent);
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+}
+.logo-icon svg { width: 14px; height: 14px; }
+.logo-name {
+  font-family: 'Instrument Serif', serif;
+  font-size: 18px;
+  letter-spacing: -0.3px;
+  color: var(--text);
+}
+.theme-btn {
+  width: 30px; height: 30px;
+  border-radius: 7px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  transition: all 0.15s;
+}
+.theme-btn:hover { color: var(--text); background: var(--surface3); }
+
+.sidebar-scroll { flex: 1; overflow-y: auto; padding: 12px 10px; }
+
+.nav-group { margin-bottom: 20px; }
+.nav-group-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  padding: 0 6px;
+  margin-bottom: 4px;
+}
+.nav-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+  border-radius: var(--r-sm);
+  color: var(--text2);
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.12s;
+  text-align: left;
+}
+.nav-btn:hover { background: var(--surface2); color: var(--text); }
+.nav-btn.active { background: var(--accent-dim); color: var(--accent); }
+.nav-btn svg { width: 15px; height: 15px; flex-shrink: 0; opacity: 0.8; }
+.nav-btn.active svg { opacity: 1; }
+.nav-count {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text3);
+  background: var(--surface3);
+  padding: 1px 6px;
+  border-radius: 999px;
+  min-width: 20px;
+  text-align: center;
+}
+.nav-btn.active .nav-count { background: var(--accent-border); color: var(--accent); }
+
+/* collection items */
+.col-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--r-sm);
+  color: var(--text2);
+  font-size: 13px;
+  transition: all 0.12s;
+  text-align: left;
+}
+.col-btn:hover { background: var(--surface2); color: var(--text); }
+.col-btn.active { background: var(--accent-dim); color: var(--accent); }
+.col-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.col-name { flex: 1; font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.col-count { font-size: 11px; color: var(--text3); }
+.add-col-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: var(--r-sm);
+  color: var(--text3);
+  font-size: 12px;
+  transition: all 0.12s;
+  border: 1px dashed var(--border2);
+  margin-top: 4px;
+}
+.add-col-btn:hover { color: var(--accent); border-color: var(--accent-border); background: var(--accent-dim); }
+
+.sidebar-footer {
+  padding: 12px 10px;
+  border-top: 1px solid var(--border);
+}
+.plan-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 10px 12px;
+}
+.plan-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.plan-label { font-size: 11px; color: var(--text3); }
+.plan-val { font-size: 11px; font-weight: 600; color: var(--text2); }
+.plan-bar-bg { height: 3px; background: var(--surface3); border-radius: 2px; overflow: hidden; }
+.plan-bar { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.4s; }
+
+/* MAIN */
+.main {
+  margin-left: 232px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* TOPBAR */
+.topbar {
+  position: sticky; top: 0;
+  z-index: 50;
+  background: rgba(10,10,11,0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: background 0.2s;
+}
+[data-theme="light"] .topbar { background: rgba(248,248,250,0.85); }
+.page-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: 19px;
+  letter-spacing: -0.3px;
+  white-space: nowrap;
+}
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+
+.search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.search-box svg {
+  position: absolute; left: 10px;
+  width: 14px; height: 14px;
+  color: var(--text3);
+  pointer-events: none;
+}
+.search-input {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  color: var(--text);
+  font-size: 13px;
+  padding: 7px 10px 7px 32px;
+  width: 200px;
+  outline: none;
+  transition: border 0.15s, width 0.25s;
+}
+.search-input::placeholder { color: var(--text3); }
+.search-input:focus { border-color: var(--accent); width: 260px; }
+.kbd {
+  position: absolute; right: 8px;
+  font-size: 10px; color: var(--text3);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 5px;
+  pointer-events: none;
+}
+
+.btn-primary {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: var(--r-sm);
+  transition: opacity 0.15s, transform 0.15s;
+  white-space: nowrap;
+}
+.btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn-primary svg { width: 14px; height: 14px; }
+
+.icon-btn {
+  width: 34px; height: 34px;
+  display: grid; place-items: center;
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  font-size: 13px;
+  transition: all 0.12s;
+}
+.icon-btn:hover { background: var(--surface2); color: var(--text); }
+.icon-btn.active { background: var(--accent-dim); color: var(--accent); border-color: var(--accent-border); }
+.icon-btn svg { width: 15px; height: 15px; }
+
+/* CONTENT */
+.content { padding: 20px 24px; flex: 1; }
+
+/* STATS */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px 16px;
+  transition: border 0.15s;
+}
+.stat:hover { border-color: var(--border2); }
+.stat-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.stat-icon {
+  width: 28px; height: 28px;
+  border-radius: 7px;
+  display: grid; place-items: center;
+}
+.stat-icon svg { width: 14px; height: 14px; }
+.stat-trend { font-size: 10px; font-weight: 600; }
+.stat-num { font-size: 26px; font-weight: 700; letter-spacing: -1px; margin-bottom: 2px; }
+.stat-lbl { font-size: 11px; color: var(--text3); font-weight: 500; }
+
+/* TOOLBAR */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.chip {
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text2);
+  transition: all 0.12s;
+  cursor: pointer;
+}
+.chip:hover { color: var(--text); border-color: var(--border2); }
+.chip.active { background: var(--accent-dim); color: var(--accent); border-color: var(--accent-border); }
+.sep { width: 1px; height: 18px; background: var(--border); }
+.toolbar-right { margin-left: auto; display: flex; gap: 4px; }
+
+/* GRID / LIST */
+.grid-view {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 12px;
+}
+.list-view { display: flex; flex-direction: column; gap: 8px; }
+
+/* CARD */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+.card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+.card-unread-dot {
+  position: absolute;
+  top: 10px; right: 10px;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.card-thumb {
+  height: 130px;
+  background: var(--surface2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.card-thumb-placeholder {
+  width: 100%; height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.card-thumb-placeholder svg { width: 36px; height: 36px; opacity: 0.2; }
+.card-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.card-body { padding: 13px; flex: 1; display: flex; flex-direction: column; gap: 7px; }
+.card-meta { display: flex; align-items: center; gap: 8px; }
+.card-source { font-size: 11px; font-weight: 600; color: var(--blue); letter-spacing: 0.2px; }
+.card-date { font-size: 11px; color: var(--text3); }
+.card-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--text);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.card-summary {
+  font-size: 12px;
+  color: var(--text2);
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  flex: 1;
+}
+.card-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.tag {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 999px;
+  cursor: default;
+}
+.tag-tech    { background: var(--blue-dim);   color: var(--blue); }
+.tag-economy { background: var(--amber-dim);  color: var(--amber); }
+.tag-ai      { background: var(--accent-dim); color: var(--accent); }
+.tag-science { background: var(--green-dim);  color: var(--green); }
+.tag-politics{ background: var(--red-dim);    color: var(--red); }
+.tag-default { background: var(--surface3);   color: var(--text2); }
+
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+.status-pill {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.status-unread { background: var(--accent-dim); color: var(--accent); }
+.status-read   { background: var(--surface3);   color: var(--text3); }
+.status-later  { background: var(--blue-dim);   color: var(--blue); }
+
+.card-actions { display: flex; gap: 2px; }
+.sm-btn {
+  width: 26px; height: 26px;
+  border-radius: 6px;
+  display: grid; place-items: center;
+  background: none;
+  border: none;
+  color: var(--text3);
+  transition: all 0.12s;
+  cursor: pointer;
+}
+.sm-btn svg { width: 13px; height: 13px; }
+.sm-btn:hover { background: var(--surface2); color: var(--text); }
+.sm-btn.starred { color: var(--amber); }
+.sm-btn.trash:hover { background: var(--red-dim); color: var(--red); }
+
+/* LIST ITEM */
+.list-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.list-item:hover { border-color: var(--accent); }
+.list-thumb {
+  width: 52px; height: 52px;
+  border-radius: var(--r-sm);
+  background: var(--surface2);
+  display: grid; place-items: center;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.list-thumb svg { width: 20px; height: 20px; opacity: 0.2; }
+.list-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.list-body { flex: 1; min-width: 0; }
+.list-title { font-size: 13.5px; font-weight: 600; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.list-sub { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.list-summary { font-size: 12px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.list-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+
+/* EMPTY */
+.empty {
+  grid-column: 1/-1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 80px 20px;
+  gap: 10px;
+  color: var(--text3);
+  text-align: center;
+}
+.empty svg { width: 48px; height: 48px; opacity: 0.25; margin-bottom: 6px; }
+.empty-title { font-family: 'Instrument Serif', serif; font-size: 18px; color: var(--text2); }
+.empty-desc { font-size: 13px; line-height: 1.6; max-width: 300px; }
+
+/* MODAL */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.65);
+  backdrop-filter: blur(6px);
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s;
+}
+.overlay.open { opacity: 1; pointer-events: all; }
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-lg);
+  width: 520px;
+  max-width: 92vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 24px;
+  box-shadow: var(--shadow-lg);
+  transform: scale(0.96) translateY(8px);
+  transition: transform 0.18s;
+}
+.overlay.open .modal { transform: scale(1) translateY(0); }
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.modal-title { font-family: 'Instrument Serif', serif; font-size: 18px; }
+.modal-close {
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text3);
+  display: grid; place-items: center;
+  cursor: pointer;
+  transition: all 0.12s;
+  font-size: 16px;
+}
+.modal-close:hover { color: var(--text); background: var(--surface3); }
+
+.field { margin-bottom: 14px; }
+.field-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 6px;
+}
+.field-input, .field-select, .field-textarea {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  color: var(--text);
+  font-size: 13px;
+  padding: 9px 12px;
+  outline: none;
+  transition: border 0.15s;
+}
+.field-input::placeholder, .field-textarea::placeholder { color: var(--text3); }
+.field-input:focus, .field-select:focus, .field-textarea:focus { border-color: var(--accent); }
+.field-select { cursor: pointer; }
+.field-select option { background: var(--surface2); }
+.field-textarea { resize: vertical; min-height: 76px; line-height: 1.6; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.url-field { position: relative; }
+.paste-btn {
+  position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text2);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.paste-btn:hover { color: var(--accent); border-color: var(--accent-border); }
+
+.ai-hint {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--accent-dim);
+  border: 1px solid var(--accent-border);
+  border-radius: var(--r-sm);
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--accent);
+  margin-bottom: 14px;
+}
+.ai-pulse {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+  animation: pulse 1.5s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.7)} }
+@keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+
+.tag-editor { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 6px; }
+.tag-editable {
+  display: flex; align-items: center; gap: 4px;
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px 8px 3px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text2);
+}
+.tag-editable button { color: var(--text3); line-height: 1; font-size: 12px; transition: color 0.1s; }
+.tag-editable button:hover { color: var(--red); }
+.tag-add-input {
+  background: none;
+  border: 1px dashed var(--border2);
+  border-radius: 999px;
+  color: var(--text);
+  font-size: 11px;
+  padding: 3px 10px;
+  width: 90px;
+  outline: none;
+  transition: border 0.12s, width 0.2s;
+}
+.tag-add-input:focus { border-color: var(--accent); width: 120px; }
+.tag-add-input::placeholder { color: var(--text3); }
+
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+.btn-ghost {
+  padding: 7px 14px;
+  border-radius: var(--r-sm);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.btn-ghost:hover { background: var(--surface3); color: var(--text); }
+
+/* DETAIL PANEL */
+.panel-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 200;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.25s;
+}
+.panel-overlay.open { opacity: 1; pointer-events: all; }
+.panel {
+  position: fixed;
+  top: 0; right: -520px;
+  width: 480px;
+  height: 100vh;
+  background: var(--bg2);
+  border-left: 1px solid var(--border);
+  z-index: 201;
+  transition: right 0.28s cubic-bezier(.4,0,.2,1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.panel.open { right: 0; }
+.panel-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  background: var(--bg2);
+}
+.panel-back {
+  width: 30px; height: 30px;
+  border-radius: 7px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  display: grid; place-items: center;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.panel-back:hover { color: var(--text); }
+.panel-back svg { width: 15px; height: 15px; }
+.panel-label { font-size: 12px; color: var(--text3); flex: 1; }
+.panel-head-actions { display: flex; gap: 4px; }
+
+.panel-scroll { flex: 1; overflow-y: auto; }
+.panel-thumb {
+  height: 180px;
+  background: var(--surface2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.panel-thumb svg { width: 48px; height: 48px; opacity: 0.15; }
+.panel-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.panel-body { padding: 20px; }
+.panel-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: 20px;
+  line-height: 1.35;
+  margin-bottom: 10px;
+}
+.panel-meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 16px; }
+.panel-source { font-size: 12px; font-weight: 600; color: var(--blue); }
+.panel-date { font-size: 12px; color: var(--text3); }
+
+.ai-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px;
+  margin-bottom: 14px;
+}
+.ai-box-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+.ai-box-head svg { width: 12px; height: 12px; }
+.ai-box-text { font-size: 13px; color: var(--text2); line-height: 1.7; }
+
+.section { margin-bottom: 16px; }
+.section-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text3);
+  margin-bottom: 8px;
+}
+.kw-list { display: flex; flex-wrap: wrap; gap: 5px; }
+.kw {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 11px;
+  padding: 3px 10px;
+  color: var(--text2);
+}
+
+.stars-row { display: flex; gap: 4px; }
+.star-btn { font-size: 16px; cursor: pointer; transition: transform 0.1s; line-height: 1; }
+.star-btn:hover { transform: scale(1.2); }
+
+.panel-memo {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.6;
+  padding: 10px 12px;
+  resize: vertical;
+  min-height: 90px;
+  outline: none;
+  transition: border 0.15s;
+}
+.panel-memo:focus { border-color: var(--accent); }
+.panel-memo::placeholder { color: var(--text3); }
+
+.col-assign { display: flex; flex-wrap: wrap; gap: 5px; }
+.col-chip {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 0.12s;
+  display: flex; align-items: center; gap: 5px;
+}
+.col-chip:hover { border-color: var(--border2); color: var(--text); }
+.col-chip.assigned { border-color: var(--accent-border); color: var(--accent); background: var(--accent-dim); }
+.col-chip-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+.panel-footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  background: var(--bg2);
+}
+.status-select {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  color: var(--text);
+  font-size: 12px;
+  padding: 6px 10px;
+  cursor: pointer;
+  outline: none;
+  transition: border 0.12s;
+}
+.status-select:focus { border-color: var(--accent); }
+.status-select option { background: var(--surface2); }
+.btn-open {
+  flex: 1;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 7px;
+  border-radius: var(--r-sm);
+  transition: opacity 0.15s;
+  text-decoration: none;
+}
+.btn-open:hover { opacity: 0.88; }
+.btn-open svg { width: 13px; height: 13px; }
+.btn-del {
+  padding: 7px 12px;
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  font-size: 13px;
+  cursor: pointer;
+  display: flex; align-items: center; gap: 5px;
+  transition: all 0.12s;
+}
+.btn-del svg { width: 13px; height: 13px; }
+.btn-del:hover { background: var(--red-dim); color: var(--red); border-color: var(--red); }
+
+/* TRASH VIEW */
+.trash-note {
+  background: var(--red-dim);
+  border: 1px solid rgba(248,113,113,0.2);
+  border-radius: var(--r);
+  padding: 10px 14px;
+  font-size: 12px;
+  color: var(--red);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.trash-note svg { width: 14px; height: 14px; flex-shrink: 0; }
+.btn-empty-trash {
+  padding: 5px 12px;
+  background: var(--red-dim);
+  border: 1px solid rgba(248,113,113,0.3);
+  border-radius: var(--r-sm);
+  color: var(--red);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: auto;
+  transition: all 0.12s;
+  white-space: nowrap;
+}
+.btn-empty-trash:hover { background: var(--red); color: #fff; }
+
+/* COLLECTION MODAL */
+.color-picker { display: flex; gap: 6px; flex-wrap: wrap; }
+.color-swatch {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: transform 0.12s, border-color 0.12s;
+}
+.color-swatch:hover { transform: scale(1.15); }
+.color-swatch.selected { border-color: var(--text); }
+
+/* TOAST */
+.toast {
+  position: fixed;
+  bottom: 20px; right: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--r);
+  padding: 10px 16px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 9999;
+  box-shadow: var(--shadow-lg);
+  transform: translateY(60px);
+  opacity: 0;
+  transition: all 0.25s cubic-bezier(.4,0,.2,1);
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.toast.ok .toast-dot { background: var(--green); }
+.toast.err .toast-dot { background: var(--red); }
+.toast.info .toast-dot { background: var(--blue); }
+
+/* AUTH SCREEN */
+.auth-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9000;}
+.auth-box{width:400px;max-width:92vw;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r-lg);padding:36px 32px;box-shadow:var(--shadow-lg);}
+.auth-logo{display:flex;align-items:center;gap:10px;margin-bottom:28px;}
+.auth-logo-icon{width:36px;height:36px;background:var(--accent);border-radius:9px;display:grid;place-items:center;}
+.auth-logo-icon svg{width:18px;height:18px;}
+.auth-logo-name{font-family:"Instrument Serif",serif;font-size:22px;}
+.auth-title{font-family:"Instrument Serif",serif;font-size:20px;margin-bottom:6px;}
+.auth-desc{font-size:13px;color:var(--text3);margin-bottom:24px;}
+.auth-tabs{display:flex;background:var(--surface2);border-radius:var(--r-sm);padding:3px;margin-bottom:20px;}
+.auth-tab{flex:1;padding:7px;border-radius:5px;font-size:13px;font-weight:600;color:var(--text3);cursor:pointer;transition:all .15s;text-align:center;border:none;background:none;}
+.auth-tab.active{background:var(--surface);color:var(--text);box-shadow:var(--shadow);}
+.auth-field{margin-bottom:12px;}
+.auth-label{display:block;font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;}
+.auth-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);color:var(--text);font-size:13px;padding:10px 12px;outline:none;transition:border .15s;font-family:inherit;}
+.auth-input::placeholder{color:var(--text3);}
+.auth-input:focus{border-color:var(--accent);}
+.auth-btn{width:100%;padding:11px;background:var(--accent);color:#fff;font-size:14px;font-weight:700;border:none;border-radius:var(--r-sm);cursor:pointer;margin-top:6px;transition:opacity .15s,transform .15s;font-family:inherit;}
+.auth-btn:hover{opacity:.88;transform:translateY(-1px);}
+.auth-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.auth-msg{border-radius:var(--r-sm);padding:9px 12px;font-size:12px;margin-bottom:12px;display:none;}
+.auth-msg.show{display:block;}
+.auth-msg.err{background:var(--red-dim);border:1px solid rgba(248,113,113,.25);color:var(--red);}
+.auth-msg.ok{background:var(--green-dim);border:1px solid rgba(52,211,153,.25);color:var(--green);}
+.user-btn{display:flex;align-items:center;gap:7px;padding:5px 10px 5px 5px;border-radius:var(--r-sm);background:var(--surface2);border:1px solid var(--border);color:var(--text2);font-size:12px;font-weight:500;cursor:pointer;transition:all .12s;position:relative;}
+.user-btn:hover{background:var(--surface3);color:var(--text);}
+.user-avatar{width:24px;height:24px;border-radius:50%;background:var(--accent);display:grid;place-items:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;}
+.user-dropdown{position:absolute;top:calc(100% + 6px);right:0;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);padding:6px;min-width:180px;box-shadow:var(--shadow-lg);z-index:500;display:none;}
+.user-dropdown.open{display:block;}
+.user-dropdown-email{font-size:11px;color:var(--text3);padding:4px 8px 8px;border-bottom:1px solid var(--border);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.dropdown-btn{width:100%;display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:var(--r-sm);font-size:13px;color:var(--text2);cursor:pointer;border:none;background:none;text-align:left;font-family:inherit;transition:all .12s;}
+.dropdown-btn:hover{background:var(--surface2);color:var(--text);}
+.dropdown-btn.danger:hover{background:var(--red-dim);color:var(--red);}
+.dropdown-btn svg{width:14px;height:14px;}
+/* LOADING BAR */
+.loading-bar {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--accent);
+  z-index: 9999;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.2s;
+  opacity: 0;
+}
+.loading-bar.go { opacity: 1; transform: scaleX(0.65); transition: transform 2s ease-out; }
+.loading-bar.done { transform: scaleX(1); transition: transform 0.15s; }
+</style>
+</head>
+<body>
+
+<div class="loading-bar" id="loadingBar"></div>
+<!-- AUTH SCREEN -->
+<div class="auth-screen" id="authScreen">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+      </div>
+      <span class="auth-logo-name">LinkLens</span>
+    </div>
+    <h2 class="auth-title" id="authTitle">로그인</h2>
+    <p class="auth-desc" id="authDesc">계정으로 로그인하고 저장한 링크를 관리하세요</p>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tabLogin" onclick="switchTab('login')">로그인</button>
+      <button class="auth-tab" id="tabSignup" onclick="switchTab('signup')">회원가입</button>
+    </div>
+    <div class="auth-msg err" id="authErr"></div>
+    <div class="auth-msg ok" id="authOk"></div>
+    <div class="auth-field">
+      <label class="auth-label">이메일</label>
+      <input class="auth-input" type="email" id="authEmail" placeholder="name@example.com" onkeydown="authEnter(event)">
+    </div>
+    <div class="auth-field">
+      <label class="auth-label">비밀번호</label>
+      <input class="auth-input" type="password" id="authPass" placeholder="비밀번호를 입력하세요" onkeydown="authEnter(event)">
+    </div>
+    <button class="auth-btn" id="authBtn" onclick="doAuth()">로그인</button>
+  </div>
+</div>
+
+
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="logo">
+    <div class="logo-mark">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+      </div>
+      <span class="logo-name">LinkLens</span>
+    </div>
+    <button class="theme-btn" onclick="toggleTheme()" title="테마 전환" id="themeBtn">☾</button>
+  </div>
+
+  <div class="sidebar-scroll">
+    <div class="nav-group">
+      <div class="nav-group-label">라이브러리</div>
+      <button class="nav-btn active" onclick="setFilter('all',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        전체 기사
+        <span class="nav-count" id="nb-all">0</span>
+      </button>
+      <button class="nav-btn" onclick="setFilter('unread',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        미읽음 <span class="nav-count" id="nb-unread">0</span>
+      </button>
+      <button class="nav-btn" onclick="setFilter('later',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+        나중에 읽기
+        <span class="nav-count" id="nb-later">0</span>
+      </button>
+      <button class="nav-btn" onclick="setFilter('starred',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        즐겨찾기
+        <span class="nav-count" id="nb-starred">0</span>
+      </button>
+      <button class="nav-btn" onclick="setFilter('trash',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        휴지통 <span class="nav-count" id="nb-trash">0</span>
+      </button>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-label">카테고리</div>
+      <button class="nav-btn" onclick="setCat('tech',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        테크/IT <span class="nav-count" id="nb-tech">0</span>
+      </button>
+      <button class="nav-btn" onclick="setCat('economy',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        경제/금융 <span class="nav-count" id="nb-economy">0</span>
+      </button>
+      <button class="nav-btn" onclick="setCat('ai',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/></svg>
+        AI/미래 <span class="nav-count" id="nb-ai">0</span>
+      </button>
+      <button class="nav-btn" onclick="setCat('science',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg>
+        과학 <span class="nav-count" id="nb-science">0</span>
+      </button>
+      <button class="nav-btn" onclick="setCat('politics',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        정치/사회 <span class="nav-count" id="nb-politics">0</span>
+      </button>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-label">컬렉션</div>
+      <div id="colList"></div>
+      <button class="add-col-btn" onclick="openColModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        컬렉션 추가
+      </button>
+    </div>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="plan-card">
+      <div class="plan-row">
+        <span class="plan-label">Free ?뚮옖</span>
+        <span class="plan-val" id="planVal">0 / 30</span>
+      </div>
+      <div class="plan-bar-bg"><div class="plan-bar" id="planBar" style="width:0%"></div></div>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <h1 class="page-title" id="pageTitle">전체 기사</h1>
+    <div class="topbar-right">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input class="search-input" id="searchInput" placeholder="검색어 입력" oninput="doSearch()" autocomplete="off">
+        <span class="kbd">⌘K</span>
+      </div>
+      
+      <div style="position:relative">
+        <button class="user-btn" id="userBtn" onclick="toggleUserMenu()">
+          <div class="user-avatar" id="userAvatar">?</div>
+          <span id="userEmail" style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+        </button>
+        <div class="user-dropdown" id="userDropdown">
+          <div class="user-dropdown-email" id="userDropdownEmail"></div>
+          <button class="dropdown-btn danger" onclick="doSignOut()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            로그아웃
+          </button>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="openAddModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        링크 추가
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- STATS -->
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-top">
+          <div class="stat-icon" style="background:var(--accent-dim)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+          </div>
+        </div>
+        <div class="stat-num" id="s-total">0</div>
+        <div class="stat-lbl">전체 기사</div>
+      </div>
+      <div class="stat">
+        <div class="stat-top">
+          <div class="stat-icon" style="background:var(--blue-dim)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+        </div>
+        <div class="stat-num" id="s-unread">0</div>
+        <div class="stat-lbl">미읽음</div>
+      </div>
+      <div class="stat">
+        <div class="stat-top">
+          <div class="stat-icon" style="background:var(--green-dim)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/></svg>
+          </div>
+        </div>
+        <div class="stat-num" id="s-ai">0</div>
+        <div class="stat-lbl">AI ?붿빟 ?꾨즺</div>
+      </div>
+      <div class="stat">
+        <div class="stat-top">
+          <div class="stat-icon" style="background:var(--amber-dim)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+        </div>
+        <div class="stat-num" id="s-starred">0</div>
+        <div class="stat-lbl">즐겨찾기</div>
+      </div>
+    </div>
+
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+      <button class="chip active" onclick="setSort('newest',this)">최신순</button>
+      <button class="chip" onclick="setSort('oldest',this)">오래된순</button>
+      <button class="chip" onclick="setSort('rating',this)">별점순</button>
+      <div class="sep"></div>
+      <button class="chip" id="chipUnread" onclick="toggleUnread(this)">미읽음만</button>
+      <div class="toolbar-right">
+        <button class="icon-btn active" id="btnGrid" onclick="setView('grid')" title="카드뷰">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        </button>
+        <button class="icon-btn" id="btnList" onclick="setView('list')" title="리스트">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- ARTICLES -->
+    <div id="articlesWrap" class="grid-view"></div>
+  </div>
+</div>
+
+<!-- ADD MODAL -->
+<div class="overlay" id="addOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title">링크 추가</span>
+      <button class="modal-close" onclick="closeAddModal()">×</button>
+    </div>
+    <div class="ai-hint">
+      <div class="ai-pulse"></div>
+      AI가 자동으로 제목, 요약, 키워드, 카테고리를 추출합니다
+    </div>
+    <div class="field">
+      <label class="field-label">URL *</label>
+      <div class="url-field">
+        <input class="field-input" id="fUrl" placeholder="https://..." style="padding-right:72px" oninput="onUrlInput()">
+        <button class="paste-btn" onclick="doPaste()">붙여넣기</button>
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-label">제목 <span style="color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">(자동 입력, 직접 수정 가능)</span></label>
+      <input class="field-input" id="fTitle" placeholder="기사 제목을 입력하거나 자동 감지됩니다" oninput="this.dataset.manualEdit=this.value?'1':'0'">
+    </div>
+    <div class="field-row" style="margin-bottom:14px">
+      <div class="field">
+        <label class="field-label">카테고리</label>
+        <select class="field-select" id="fCat">
+          <option value="tech">테크/IT</option>
+          <option value="economy">경제/금융</option>
+          <option value="ai">AI/미래</option>
+          <option value="science">과학</option>
+          <option value="politics">정치/사회</option>
+          <option value="default">기타</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="field-label">읽기 상태</label>
+        <select class="field-select" id="fStatus">
+          <option value="unread">미읽음</option>
+          <option value="later">나중에 읽기</option>
+          <option value="read">읽음</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-label">태그 <span style="color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">(Enter로 추가)</span></label>
+      <div class="tag-editor" id="fTagEditor">
+        <input class="tag-add-input" id="fTagInput" placeholder="태그 추가" onkeydown="addTagKey(event)">
+      </div>
+    </div>
+    <div class="field">
+      <label class="field-label">硫붾え</label>
+      <textarea class="field-textarea" id="fMemo" placeholder="이 기사에 대한 생각이나 메모를 남겨보세요"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeAddModal()">취소</button>
+      <button class="btn-primary" onclick="saveArticle()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        AI 분석 후 저장
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- COLLECTION MODAL -->
+<div class="overlay" id="colOverlay">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-head">
+      <span class="modal-title" id="colModalTitle">컬렉션 만들기</span>
+      <button class="modal-close" onclick="closeColModal()">×</button>
+    </div>
+    <div class="field">
+      <label class="field-label">이름</label>
+      <input class="field-input" id="colName" placeholder="예: AI 연구, 주간 스크랩">
+    </div>
+    <div class="field">
+      <label class="field-label">색상</label>
+      <div class="color-picker" id="colorPicker"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeColModal()">취소</button>
+      <button class="btn-primary" id="colSaveBtn" onclick="saveCollection()">만들기</button>
+    </div>
+  </div>
+</div>
+
+<div class="panel-overlay" id="panelOv" onclick="closePanel()"></div>
+<div class="panel" id="panel">
+  <div class="panel-head">
+    <button class="panel-back" onclick="closePanel()">←</button>
+    <span class="panel-label">기사 상세</span>
+    <div class="panel-head-actions">
+      <button class="icon-btn" id="pStarBtn" onclick="togglePanelStar()" title="즐겨찾기">★</button>
+    </div>
+  </div>
+  <div class="panel-scroll">
+    <div class="panel-thumb" id="pThumb"></div>
+    <div class="panel-body">
+      <h2 class="panel-title" id="pTitle"></h2>
+      <div class="panel-meta">
+        <span class="panel-source" id="pSource"></span>
+        <span class="panel-date" id="pDate"></span>
+        <span class="tag" id="pCatTag"></span>
+      </div>
+      <div class="ai-box">
+        <div class="ai-box-head">AI 자동 요약</div>
+        <div class="ai-box-text" id="pSummary"></div>
+      </div>
+      <div class="section">
+        <div class="section-label">키워드</div>
+        <div class="kw-list" id="pKeywords"></div>
+      </div>
+      <div class="section">
+        <div class="section-label">태그</div>
+        <div class="tag-editor" id="pTagEditor">
+          <input class="tag-add-input" id="pTagInput" placeholder="태그 추가" onkeydown="addPanelTagKey(event)">
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-label">컬렉션</div>
+        <div class="col-assign" id="pColAssign"></div>
+      </div>
+      <div class="section">
+        <div class="section-label">별점</div>
+        <div class="stars-row" id="pStars"></div>
+      </div>
+      <div class="section">
+        <div class="section-label">메모</div>
+        <textarea class="panel-memo" id="pMemo" placeholder="메모를 입력하세요" onchange="savePanelMemo()"></textarea>
+      </div>
+    </div>
+  </div>
+  <div class="panel-footer">
+    <select class="status-select" id="pStatus" onchange="savePanelStatus()">
+      <option value="unread">미읽음</option>
+      <option value="later">나중에 읽기</option>
+      <option value="read">읽음</option>
+    </select>
+    <button class="btn-del" onclick="trashFromPanel()">삭제</button>
+    <a class="btn-open" id="pLink" href="#" target="_blank">원문 보기</a>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <div class="toast-dot"></div>
+  <span id="toastMsg"></span>
+</div>
+
+<script type="module" src="./js/app.js"></script>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
