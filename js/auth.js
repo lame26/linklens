@@ -4,9 +4,34 @@ import { clearAppStorage } from './storage.js';
 import { loadFromDB } from './db.js';
 import { refresh, toast } from './ui.js';
 
-function showAuthErr(msg) {
+function resolveAuthErrMessage(msg, category = 'general') {
+  const raw = typeof msg === 'string' ? msg : msg?.message || String(msg || '');
+  const knownMessages = {
+    'Invalid login credentials': '이메일 또는 비밀번호가 올바르지 않습니다',
+    'User already registered': '이미 가입된 이메일입니다',
+    'Password should be at least 6 characters': '비밀번호는 6자 이상이어야 합니다',
+  };
+
+  if (knownMessages[raw]) return knownMessages[raw];
+
+  if (category === 'sdk' || /supabase is not defined|createClient|Cannot read properties of undefined \(reading 'auth'\)/i.test(raw)) {
+    return 'Supabase SDK를 불러오지 못했습니다. 페이지를 새로고침해주세요';
+  }
+
+  if (category === 'session' || /getSession|session/i.test(raw)) {
+    return '세션 조회에 실패했습니다. 잠시 후 다시 시도해주세요';
+  }
+
+  if (category === 'credentials' || /invalid login credentials|email or password|이메일 또는 비밀번호/i.test(raw)) {
+    return '이메일 또는 비밀번호가 올바르지 않습니다';
+  }
+
+  return raw || '인증 처리 중 오류가 발생했습니다';
+}
+
+function showAuthErr(msg, category = 'general') {
   const el = document.getElementById('authErr');
-  el.textContent = msg;
+  el.textContent = resolveAuthErrMessage(msg, category);
   el.className = 'auth-msg err show';
   document.getElementById('authOk').className = 'auth-msg ok';
 }
@@ -51,8 +76,13 @@ async function handleSession(session, { forceReload = false } = {}) {
   const shouldLoad = forceReload || state.currentUser?.id !== nextUserId || state.articles.length === 0;
   setUser(session.user);
   if (shouldLoad) {
-    await loadFromDB();
-    refresh();
+    try {
+      await loadFromDB();
+      refresh();
+    } catch (e) {
+      console.error('loadFromDB failed:', e);
+      toast('데이터 로드 실패', 'err');
+    }
   }
 }
 
@@ -95,12 +125,10 @@ export async function doAuth() {
       return;
     }
   } catch (e) {
-    const msgs = {
-      'Invalid login credentials': '이메일 또는 비밀번호가 올바르지 않습니다',
-      'User already registered': '이미 가입된 이메일입니다',
-      'Password should be at least 6 characters': '비밀번호는 6자 이상이어야 합니다',
-    };
-    showAuthErr(msgs[e.message] || e.message);
+    const category = /supabase is not defined|createClient|Cannot read properties of undefined \(reading 'auth'\)/i.test(e?.message || '')
+      ? 'sdk'
+      : 'credentials';
+    showAuthErr(e, category);
   } finally {
     btn.disabled = false;
     btn.textContent = btnLabel;
@@ -147,8 +175,8 @@ export async function bootAuth() {
     await handleSession(data?.session, { forceReload: true });
   } catch (e) {
     console.error('bootAuth failed:', e);
-    toast('세션 확인 실패: ' + (e.message || e), 'err');
     clearUser();
+    showAuthErr('서비스 초기화 실패, 새로고침 후 재시도');
   } finally {
     authState.initialized = true;
     authState.phase = state.currentUser ? 'signed_in' : 'signed_out';
