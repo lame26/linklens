@@ -141,11 +141,14 @@ export async function saveArticle() {
   cancelUrlAnalysis();
 
   const btn = document.querySelector('#addOverlay .btn-primary');
-  const btnOriginal = btn.innerHTML;
+  const btnOriginal = btn ? btn.innerHTML : '';
   const SPIN = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;animation:spin 0.8s linear infinite"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg>`;
 
-  btn.disabled = true;
-  btn.innerHTML = SPIN + ' 저장 중...';
+  state.savingArticle = true;
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = SPIN + ' 저장 중...';
+  }
   startLoading();
 
   const cat = document.getElementById('fCat').value;
@@ -170,7 +173,6 @@ export async function saveArticle() {
   };
 
   let savedId = null;
-  state.savingArticle = true;
 
   try {
     savedId = await dbIns(a);
@@ -185,8 +187,10 @@ export async function saveArticle() {
     return;
   } finally {
     stopLoading();
-    btn.disabled = false;
-    btn.innerHTML = btnOriginal;
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = btnOriginal;
+    }
     state.savingArticle = false;
   }
 
