@@ -95,8 +95,15 @@ export async function doAuth() {
       const { error } = await sb.auth.signInWithPassword({ email, password: pass });
       if (error) throw error;
     } else {
-      const { error } = await sb.auth.signUp({ email, password: pass });
+      const { data, error } = await sb.auth.signUp({ email, password: pass });
       if (error) throw error;
+      const identities = data?.user?.identities || [];
+      const duplicated = !data?.session && identities.length === 0;
+      if (duplicated) {
+        showAuthErr('이미 가입된 이메일입니다. 로그인 해주세요.');
+        switchTab('login');
+        return;
+      }
       showAuthOk('가입이 완료되었습니다. 로그인해보세요.');
       return;
     }
@@ -148,8 +155,6 @@ export function bindAuthUIEvents() {
 }
 
 export async function bootAuth() {
-  if (sawInitialSession) return;
-
   if (!sb) {
     clearUser();
     authState.initialized = true;
@@ -160,6 +165,7 @@ export async function bootAuth() {
   try {
     const { data, error } = await sb.auth.getSession();
     if (error) throw error;
+    sawInitialSession = true;
     await handleSession(data?.session, { forceReload: true });
   } catch (e) {
     console.error('bootAuth failed:', e);

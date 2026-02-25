@@ -19,12 +19,14 @@ export function initThemeUI() {
 
 export function startLoading() {
   const b = document.getElementById('loadingBar');
+  if (!b) return;
   b.classList.remove('done');
   b.classList.add('go');
 }
 
 export function stopLoading() {
   const b = document.getElementById('loadingBar');
+  if (!b) return;
   b.classList.add('done');
   setTimeout(() => b.classList.remove('go', 'done'), 300);
 }
