@@ -13,8 +13,7 @@ export function escapeHtml(text) {
 
 export function initThemeUI() {
   document.documentElement.setAttribute('data-theme', state.theme);
-  const btn = document.getElementById('themeBtn');
-  if (btn) btn.textContent = state.theme === 'dark' ? '☾' : '☀';
+  document.getElementById('themeBtn').textContent = state.theme === 'dark' ? '☾' : '☀';
 }
 
 export function startLoading() {

@@ -54,6 +54,11 @@ import {
   bootAuth,
 } from './auth.js';
 
+initThemeUI();
+refresh();
+bindAuthUIEvents();
+bindAuthStateChange();
+
 window.addEventListener('error', (event) => {
   const msg = event?.error?.message || event?.message || 'Unknown error';
   console.error('Global error:', event?.error || event);
@@ -66,6 +71,32 @@ window.addEventListener('unhandledrejection', (event) => {
   console.error('Unhandled rejection:', reason);
   toast('비동기 에러: ' + msg, 'err');
 });
+
+window.LL = {
+  reload: async () => {
+    await loadFromDB();
+    refresh();
+  },
+  state: () => ({
+    auth: { ...authState, userId: state.currentUser?.id || null },
+    counts: {
+      articles: state.articles.length,
+      collections: state.collections.length,
+      trash: state.trash.length,
+    },
+    filter: {
+      filter: state.filter,
+      catFilter: state.catFilter,
+      colFilter: state.colFilter,
+      sortMode: state.sortMode,
+      viewMode: state.viewMode,
+      unreadOnly: state.unreadOnly,
+      searchQ: state.searchQ,
+    },
+  }),
+  analyzeUrl: (url) => analyzeWithAI(url),
+  previewUrl: (url) => previewWithAI(url),
+};
 
 Object.assign(window, {
   switchTab,
@@ -109,37 +140,6 @@ Object.assign(window, {
   deleteForever,
   emptyTrash,
 });
-
-window.LL = {
-  reload: async () => {
-    await loadFromDB();
-    refresh();
-  },
-  state: () => ({
-    auth: { ...authState, userId: state.currentUser?.id || null },
-    counts: {
-      articles: state.articles.length,
-      collections: state.collections.length,
-      trash: state.trash.length,
-    },
-    filter: {
-      filter: state.filter,
-      catFilter: state.catFilter,
-      colFilter: state.colFilter,
-      sortMode: state.sortMode,
-      viewMode: state.viewMode,
-      unreadOnly: state.unreadOnly,
-      searchQ: state.searchQ,
-    },
-  }),
-  analyzeUrl: (url) => analyzeWithAI(url),
-  previewUrl: (url) => previewWithAI(url),
-};
-
-try { initThemeUI(); } catch (e) { console.error('initThemeUI failed:', e); }
-try { refresh(); } catch (e) { console.error('refresh failed:', e); }
-try { bindAuthUIEvents(); } catch (e) { console.error('bindAuthUIEvents failed:', e); }
-try { bindAuthStateChange(); } catch (e) { console.error('bindAuthStateChange failed:', e); }
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
