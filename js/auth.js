@@ -5,6 +5,7 @@ import { loadFromDB } from './db.js';
 import { refresh, toast } from './ui.js';
 
 let sawInitialSession = false;
+let loadingSession = false; // 추가: 동시 loadFromDB 방지
 
 function showAuthErr(msg) {
   const el = document.getElementById('authErr');
@@ -53,8 +54,14 @@ async function handleSession(session, { forceReload = false } = {}) {
   const shouldLoad = forceReload || state.currentUser?.id !== nextUserId || state.articles.length === 0;
   setUser(session.user);
   if (shouldLoad) {
-    await loadFromDB();
-    refresh();
+    if (loadingSession) return; // 이미 로딩 중이면 무시
+    loadingSession = true;
+    try {
+      await loadFromDB();
+      refresh();
+    } finally {
+      loadingSession = false;
+    }
   }
 }
 
@@ -122,8 +129,18 @@ export async function doAuth() {
 
 export async function doSignOut() {
   document.getElementById('userDropdown').classList.remove('open');
+
+  if (!sb) return;
+  try {
+    await sb.auth.signOut({ scope: 'local' });
+  } catch (e) {
+    console.warn('signOut failed:', e);
+  }
+
+  // signOut 완료 후에 상태 초기화 (SIGNED_OUT 이벤트보다 먼저 처리)
   authState.phase = 'signed_out';
   authState.initialized = false;
+  sawInitialSession = false;
 
   clearAppStorage();
 
@@ -133,13 +150,6 @@ export async function doSignOut() {
   document.getElementById('authScreen').style.display = 'flex';
   refresh();
   toast('로그아웃되었습니다', 'info');
-
-  if (!sb) return;
-  try {
-    await sb.auth.signOut({ scope: 'local' });
-  } catch (e) {
-    console.warn('signOut failed:', e);
-  }
 }
 
 export function toggleUserMenu() {
@@ -160,6 +170,11 @@ export async function bootAuth() {
     authState.initialized = true;
     authState.phase = 'signed_out';
     console.error('[LinkLens] Supabase client unavailable — check CDN loading');
+    return;
+  }
+  // INITIAL_SESSION 이벤트가 이미 처리했으면 중복 실행 안 함
+  if (sawInitialSession) {
+    authState.initialized = true;
     return;
   }
   try {
@@ -196,6 +211,8 @@ export function bindAuthStateChange() {
       }
 
       if (event === 'SIGNED_OUT') {
+        // doSignOut()이 이미 처리했으면 무시 (로그아웃 후 바로 로그인 시 덮어쓰기 방지)
+        if (authState.phase === 'signed_out') return;
         clearUser();
         authState.phase = 'signed_out';
         authState.initialized = true;
