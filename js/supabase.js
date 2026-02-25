@@ -1,14 +1,8 @@
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 import { safeStorage } from './storage.js';
 
-const supabaseGlobal = typeof globalThis !== 'undefined' ? globalThis.supabase : undefined;
-
-if (!supabaseGlobal) {
-  console.error('[LinkLens] Supabase client unavailable: global `supabase` is missing');
-}
-
-export const sb = supabaseGlobal
-  ? supabaseGlobal.createClient(SUPABASE_URL, SUPABASE_KEY, {
+export const sb = typeof supabase !== 'undefined'
+  ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
       auth: {
         lock: async (name, acquireTimeout, fn) => {
           return await fn();
