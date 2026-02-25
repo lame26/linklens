@@ -130,11 +130,12 @@ export async function doAuth() {
 export async function doSignOut() {
   document.getElementById('userDropdown').classList.remove('open');
 
-  if (!sb) return;
-  try {
-    await sb.auth.signOut({ scope: 'local' });
-  } catch (e) {
-    console.warn('signOut failed:', e);
+  if (sb) {
+    try {
+      await sb.auth.signOut({ scope: 'local' });
+    } catch (e) {
+      console.warn('signOut failed:', e);
+    }
   }
 
   // signOut 완료 후에 상태 초기화 (SIGNED_OUT 이벤트보다 먼저 처리)
