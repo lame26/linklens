@@ -1,5 +1,5 @@
 ﻿import { state, authState } from './state.js';
-import { sb } from './supabase.js';
+import { sb } from '../supabase.js';
 import { clearAppStorage } from './storage.js';
 import { loadFromDB } from './db.js';
 import { refresh, toast } from './ui.js';
