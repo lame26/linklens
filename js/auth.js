@@ -71,6 +71,11 @@ export function authEnter(e) {
 }
 
 export async function doAuth() {
+  if (!sb) {
+    console.error('[LinkLens] Supabase client unavailable');
+    showAuthErr('인증 서비스를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
+    return;
+  }
   const email = document.getElementById('authEmail').value.trim();
   const pass = document.getElementById('authPass').value;
   if (!email || !pass) {
@@ -108,6 +113,15 @@ export async function doAuth() {
 }
 
 export async function doSignOut() {
+  if (!sb) {
+    console.error('[LinkLens] Supabase client unavailable');
+    clearAppStorage();
+    clearUser();
+    authState.phase = 'signed_out';
+    authState.initialized = true;
+    toast('인증 서비스를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.', 'err');
+    return;
+  }
   document.getElementById('userDropdown').classList.remove('open');
   authState.phase = 'signed_out';
   authState.initialized = false;
@@ -141,6 +155,15 @@ export function bindAuthUIEvents() {
 }
 
 export async function bootAuth() {
+  if (!sb) {
+    console.error('[LinkLens] Supabase client unavailable');
+    clearUser();
+    authState.initialized = true;
+    authState.phase = 'signed_out';
+    toast('인증 서비스를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.', 'err');
+    return;
+  }
+
   try {
     const { data, error } = await sb.auth.getSession();
     if (error) throw error;
@@ -156,6 +179,11 @@ export async function bootAuth() {
 }
 
 export function bindAuthStateChange() {
+  if (!sb) {
+    console.error('[LinkLens] Supabase client unavailable');
+    return;
+  }
+
   sb.auth.onAuthStateChange(async (event, session) => {
     try {
       if (event === 'INITIAL_SESSION') {
