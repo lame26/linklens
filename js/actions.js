@@ -123,7 +123,12 @@ export async function saveArticle() {
     return;
   }
 
-  if (state.savingArticle) return;
+  const busyBtn = document.querySelector('#addOverlay .btn-primary');
+  if (state.savingArticle) {
+    if (busyBtn?.disabled) return;
+    state.savingArticle = false;
+    stopLoading();
+  }
 
   const url = document.getElementById('fUrl').value.trim();
   if (!url) {
@@ -137,8 +142,6 @@ export async function saveArticle() {
     toast('올바른 URL을 입력해주세요', 'err');
     return;
   }
-
-  cancelUrlAnalysis();
 
   const btn = document.querySelector('#addOverlay .btn-primary');
   const btnOriginal = btn ? btn.innerHTML : '';
@@ -175,6 +178,8 @@ export async function saveArticle() {
   let savedId = null;
 
   try {
+    cancelUrlAnalysis();
+
     savedId = await dbIns(a);
     a.id = savedId;
     state.articles.unshift(a);
@@ -183,7 +188,7 @@ export async function saveArticle() {
     toast('저장되었습니다. AI 분석 중입니다...', 'ok');
   } catch (e) {
     console.error('dbIns failed:', e);
-    toast('저장 실패: ' + e.message, 'err');
+    toast('저장 실패: ' + (e.message || e), 'err');
     return;
   } finally {
     stopLoading();

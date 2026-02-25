@@ -5,6 +5,8 @@ import { loadFromDB } from './db.js';
 import { refresh, toast } from './ui.js';
 
 let sawInitialSession = false;
+let loadingSessionPromise = null;
+let signOutInProgress = false;
 
 function showAuthErr(msg) {
   const el = document.getElementById('authErr');
@@ -49,13 +51,29 @@ async function handleSession(session, { forceReload = false } = {}) {
     clearUser();
     return;
   }
+
   const nextUserId = session.user.id;
-  const shouldLoad = forceReload || state.currentUser?.id !== nextUserId || state.articles.length === 0;
   setUser(session.user);
-  if (shouldLoad) {
+
+  const shouldLoad = forceReload || state.currentUser?.id !== nextUserId || state.articles.length === 0;
+  if (!shouldLoad) return;
+
+  // 이미 로딩 중이면 먼저 기다린 뒤, 여전히 필요할 때만 다시 로드
+  if (loadingSessionPromise) {
+    await loadingSessionPromise;
+  }
+
+  const stillNeedsLoad = forceReload || state.currentUser?.id !== nextUserId || state.articles.length === 0;
+  if (!stillNeedsLoad || state.currentUser?.id !== nextUserId) return;
+
+  loadingSessionPromise = (async () => {
     await loadFromDB();
     refresh();
-  }
+  })().finally(() => {
+    loadingSessionPromise = null;
+  });
+
+  await loadingSessionPromise;
 }
 
 export function switchTab(mode) {
@@ -122,23 +140,26 @@ export async function doAuth() {
 
 export async function doSignOut() {
   document.getElementById('userDropdown').classList.remove('open');
-  authState.phase = 'signed_out';
-  authState.initialized = false;
+  signOutInProgress = true;
 
-  clearAppStorage();
-
-  state.currentUser = null;
-  state.articles = [];
-  state.collections = [];
-  document.getElementById('authScreen').style.display = 'flex';
-  refresh();
-  toast('로그아웃되었습니다', 'info');
-
-  if (!sb) return;
   try {
-    await sb.auth.signOut({ scope: 'local' });
+    if (sb) {
+      await sb.auth.signOut({ scope: 'local' });
+    }
   } catch (e) {
     console.warn('signOut failed:', e);
+  } finally {
+    sawInitialSession = false;
+    loadingSessionPromise = null;
+
+    clearAppStorage();
+    clearUser();
+
+    authState.phase = 'signed_out';
+    authState.initialized = true;
+    signOutInProgress = false;
+
+    toast('로그아웃되었습니다', 'info');
   }
 }
 
@@ -160,6 +181,11 @@ export async function bootAuth() {
     authState.initialized = true;
     authState.phase = 'signed_out';
     console.error('[LinkLens] Supabase client unavailable — check CDN loading');
+    return;
+  }
+  // INITIAL_SESSION 이벤트가 이미 처리했으면 중복 실행 안 함
+  if (sawInitialSession) {
+    authState.initialized = true;
     return;
   }
   try {
@@ -196,6 +222,11 @@ export function bindAuthStateChange() {
       }
 
       if (event === 'SIGNED_OUT') {
+        if (signOutInProgress) {
+          authState.phase = 'signed_out';
+          authState.initialized = true;
+          return;
+        }
         clearUser();
         authState.phase = 'signed_out';
         authState.initialized = true;
