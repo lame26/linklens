@@ -32,7 +32,10 @@ async function requestWorker(url, body, options = {}) {
   }
 
   if (!res.ok) {
-    throw new Error('Worker ' + res.status);
+    let body = '';
+    try { body = await res.text(); } catch {}
+    console.error(`[Worker] ${res.status} ${res.url}`, body);
+    throw new Error(`Worker ${res.status}${body ? ': ' + body.slice(0, 100) : ''}`);
   }
 
   return await res.json();
