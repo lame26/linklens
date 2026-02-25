@@ -1,14 +1,8 @@
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 import { safeStorage } from './storage.js';
 
-const createClient = globalThis.supabase?.createClient;
-
-if (!createClient) {
-  console.error('[LinkLens] Supabase SDK is not loaded');
-}
-
-export const sb = createClient
-  ? createClient(SUPABASE_URL, SUPABASE_KEY, {
+export const sb = typeof supabase !== 'undefined'
+  ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
       auth: {
         lock: async (name, acquireTimeout, fn) => {
           return await fn();
@@ -23,7 +17,7 @@ export const sb = createClient
   : null;
 
 export async function refreshSession() {
-  if (!sb) throw new Error('Supabase SDK not loaded');
+  if (!sb) return null;
   return sb.auth.refreshSession();
 }
 

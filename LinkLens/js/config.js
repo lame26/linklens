@@ -2,8 +2,7 @@ function readMeta(name) {
   const el = document.querySelector(`meta[name="${name}"]`);
   const value = el?.getAttribute('content')?.trim();
   if (!value) {
-    console.error(`[LinkLens config] Missing required meta: ${name}`);
-    return '';
+    throw new Error(`[LinkLens config] Missing required meta: ${name}`);
   }
   return value;
 }
