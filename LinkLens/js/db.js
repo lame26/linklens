@@ -29,6 +29,12 @@ function mapCollectionRow(r) {
   };
 }
 
+async function requireAuthContext() {
+  if (!sb) throw new Error('인증 서비스가 초기화되지 않았습니다');
+  if (!state.currentUser?.id) throw new Error('로그인이 필요합니다');
+  return state.currentUser.id;
+}
+
 function toDB(a) {
   return {
     user_id: state.currentUser.id,
@@ -49,10 +55,11 @@ function toDB(a) {
 }
 
 export async function loadFromDB() {
+  const userId = await requireAuthContext();
   const runLoad = async () => {
     const [artsRes, colsRes] = await Promise.all([
-      sb.from('articles').select('*').order('created_at', { ascending: false }),
-      sb.from('collections').select('*').order('created_at', { ascending: true }),
+      sb.from('articles').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
+      sb.from('collections').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
     ]);
     if (artsRes.error) throw artsRes.error;
     if (colsRes.error) throw colsRes.error;
@@ -83,24 +90,33 @@ export async function loadFromDB() {
 }
 
 export async function dbIns(a) {
-  const { data, error } = await sb.from('articles').insert(toDB(a)).select().single();
+  const userId = await requireAuthContext();
+  const payload = { ...toDB(a), user_id: userId };
+  const { data, error } = await sb.from('articles').insert(payload).select().single();
   if (error) throw new Error(error.message + ' (code:' + error.code + ')');
   if (!data) throw new Error('저장 실패 - Supabase 응답이 없습니다');
   return data.id;
 }
 
 export async function dbUpd(id, f) {
-  await sb.from('articles').update(f).eq('id', id);
+  const userId = await requireAuthContext();
+  const { error } = await sb.from('articles').update(f).eq('id', id).eq('user_id', userId);
+  if (error) throw error;
 }
+
 
 export async function dbDel(id) {
-  await sb.from('articles').delete().eq('id', id);
+  const userId = await requireAuthContext();
+  const { error } = await sb.from('articles').delete().eq('id', id).eq('user_id', userId);
+  if (error) throw error;
 }
 
+
 export async function dbInsCol(c) {
+  const userId = await requireAuthContext();
   const { data, error } = await sb
     .from('collections')
-    .insert({ user_id: state.currentUser.id, name: c.name, color: c.color })
+    .insert({ user_id: userId, name: c.name, color: c.color })
     .select()
     .single();
   if (error) throw error;
@@ -108,11 +124,13 @@ export async function dbInsCol(c) {
 }
 
 export async function dbUpdCol(id, f) {
-  const { error } = await sb.from('collections').update(f).eq('id', id);
+  const userId = await requireAuthContext();
+  const { error } = await sb.from('collections').update(f).eq('id', id).eq('user_id', userId);
   if (error) throw error;
 }
 
 export async function dbDelCol(id) {
-  const { error } = await sb.from('collections').delete().eq('id', id);
+  const userId = await requireAuthContext();
+  const { error } = await sb.from('collections').delete().eq('id', id).eq('user_id', userId);
   if (error) throw error;
 }

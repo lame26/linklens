@@ -118,6 +118,11 @@ export function removeAddTag(i) {
 }
 
 export async function saveArticle() {
+  if (!state.currentUser?.id) {
+    toast('로그인 후 저장할 수 있습니다', 'err');
+    return;
+  }
+
   const url = document.getElementById('fUrl').value.trim();
   if (!url) {
     toast('URL을 입력해주세요', 'err');
