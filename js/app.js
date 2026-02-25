@@ -54,72 +54,18 @@ import {
   bootAuth,
 } from './auth.js';
 
-let isBootPhase = true;
-
-try {
-  initThemeUI();
-} catch (error) {
-  console.error('initThemeUI failed:', error);
-}
-
-try {
-  refresh();
-} catch (error) {
-  console.error('refresh failed:', error);
-}
-
-try {
-  bindAuthUIEvents();
-} catch (error) {
-  console.error('bindAuthUIEvents failed:', error);
-}
-
-try {
-  bindAuthStateChange();
-} catch (error) {
-  console.error('bindAuthStateChange failed:', error);
-}
-
 window.addEventListener('error', (event) => {
   const msg = event?.error?.message || event?.message || 'Unknown error';
-  const stagePrefix = isBootPhase ? '[부트 단계 실패] ' : '[런타임 실패] ';
   console.error('Global error:', event?.error || event);
-  toast(stagePrefix + '에러: ' + msg, 'err');
+  toast('에러: ' + msg, 'err');
 });
 
 window.addEventListener('unhandledrejection', (event) => {
   const reason = event?.reason;
   const msg = reason?.message || String(reason || 'Unhandled rejection');
-  const stagePrefix = isBootPhase ? '[부트 단계 실패] ' : '[런타임 실패] ';
   console.error('Unhandled rejection:', reason);
-  toast(stagePrefix + '비동기 에러: ' + msg, 'err');
+  toast('비동기 에러: ' + msg, 'err');
 });
-
-window.LL = {
-  reload: async () => {
-    await loadFromDB();
-    refresh();
-  },
-  state: () => ({
-    auth: { ...authState, userId: state.currentUser?.id || null },
-    counts: {
-      articles: state.articles.length,
-      collections: state.collections.length,
-      trash: state.trash.length,
-    },
-    filter: {
-      filter: state.filter,
-      catFilter: state.catFilter,
-      colFilter: state.colFilter,
-      sortMode: state.sortMode,
-      viewMode: state.viewMode,
-      unreadOnly: state.unreadOnly,
-      searchQ: state.searchQ,
-    },
-  }),
-  analyzeUrl: (url) => analyzeWithAI(url),
-  previewUrl: (url) => previewWithAI(url),
-};
 
 Object.assign(window, {
   switchTab,
@@ -164,6 +110,37 @@ Object.assign(window, {
   emptyTrash,
 });
 
+window.LL = {
+  reload: async () => {
+    await loadFromDB();
+    refresh();
+  },
+  state: () => ({
+    auth: { ...authState, userId: state.currentUser?.id || null },
+    counts: {
+      articles: state.articles.length,
+      collections: state.collections.length,
+      trash: state.trash.length,
+    },
+    filter: {
+      filter: state.filter,
+      catFilter: state.catFilter,
+      colFilter: state.colFilter,
+      sortMode: state.sortMode,
+      viewMode: state.viewMode,
+      unreadOnly: state.unreadOnly,
+      searchQ: state.searchQ,
+    },
+  }),
+  analyzeUrl: (url) => analyzeWithAI(url),
+  previewUrl: (url) => previewWithAI(url),
+};
+
+try { initThemeUI(); } catch (e) { console.error('initThemeUI failed:', e); }
+try { refresh(); } catch (e) { console.error('refresh failed:', e); }
+try { bindAuthUIEvents(); } catch (e) { console.error('bindAuthUIEvents failed:', e); }
+try { bindAuthStateChange(); } catch (e) { console.error('bindAuthStateChange failed:', e); }
+
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     closeAddModal();
@@ -176,16 +153,4 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-try {
-  const bootAuthResult = bootAuth();
-  if (bootAuthResult && typeof bootAuthResult.finally === 'function') {
-    bootAuthResult.finally(() => {
-      isBootPhase = false;
-    });
-  } else {
-    isBootPhase = false;
-  }
-} catch (error) {
-  console.error('bootAuth failed:', error);
-  isBootPhase = false;
-}
+bootAuth();
