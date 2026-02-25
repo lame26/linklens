@@ -123,7 +123,6 @@ export async function saveArticle() {
     return;
   }
 
-  if (state.savingArticle) return;
 
   const url = document.getElementById('fUrl').value.trim();
   if (!url) {
@@ -139,6 +138,17 @@ export async function saveArticle() {
   }
 
   cancelUrlAnalysis();
+
+  // 이미 savingArticle 상태라면 이전 상태가 정리 안 된 것 — 강제 초기화
+  if (state.savingArticle) {
+    state.savingArticle = false;
+    stopLoading();
+    const prevBtn = document.querySelector('#addOverlay .btn-primary');
+    if (prevBtn) {
+      prevBtn.disabled = false;
+      prevBtn.innerHTML = '저장';
+    }
+  }
 
   const btn = document.querySelector('#addOverlay .btn-primary');
   const btnOriginal = btn ? btn.innerHTML : '';
