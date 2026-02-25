@@ -71,10 +71,6 @@ export function authEnter(e) {
 }
 
 export async function doAuth() {
-  if (!sb) {
-    showAuthErr('인증 서비스를 불러올 수 없습니다. 페이지를 새로고침 해주세요.');
-    return;
-  }
   const email = document.getElementById('authEmail').value.trim();
   const pass = document.getElementById('authPass').value;
   if (!email || !pass) {
@@ -125,7 +121,6 @@ export async function doSignOut() {
   refresh();
   toast('로그아웃되었습니다', 'info');
 
-  if (!sb) return;
   try {
     await sb.auth.signOut({ scope: 'local' });
   } catch (e) {
@@ -140,19 +135,12 @@ export function toggleUserMenu() {
 export function bindAuthUIEvents() {
   document.addEventListener('click', (e) => {
     if (!e.target.closest('.user-btn')) {
-      document.getElementById('userDropdown')?.classList.remove('open');
+      document.getElementById('userDropdown').classList.remove('open');
     }
   });
 }
 
 export async function bootAuth() {
-  if (!sb) {
-    clearUser();
-    authState.initialized = true;
-    authState.phase = 'signed_out';
-    console.error('[LinkLens] Supabase client unavailable — check CDN loading');
-    return;
-  }
   try {
     const { data, error } = await sb.auth.getSession();
     if (error) throw error;
@@ -168,7 +156,6 @@ export async function bootAuth() {
 }
 
 export function bindAuthStateChange() {
-  if (!sb) return;
   sb.auth.onAuthStateChange(async (event, session) => {
     try {
       if (event === 'INITIAL_SESSION') {
