@@ -54,22 +54,45 @@ import {
   bootAuth,
 } from './auth.js';
 
-initThemeUI();
-refresh();
-bindAuthUIEvents();
-bindAuthStateChange();
+let isBootPhase = true;
+
+try {
+  initThemeUI();
+} catch (error) {
+  console.error('initThemeUI failed:', error);
+}
+
+try {
+  refresh();
+} catch (error) {
+  console.error('refresh failed:', error);
+}
+
+try {
+  bindAuthUIEvents();
+} catch (error) {
+  console.error('bindAuthUIEvents failed:', error);
+}
+
+try {
+  bindAuthStateChange();
+} catch (error) {
+  console.error('bindAuthStateChange failed:', error);
+}
 
 window.addEventListener('error', (event) => {
   const msg = event?.error?.message || event?.message || 'Unknown error';
+  const stagePrefix = isBootPhase ? '[부트 단계 실패] ' : '[런타임 실패] ';
   console.error('Global error:', event?.error || event);
-  toast('에러: ' + msg, 'err');
+  toast(stagePrefix + '에러: ' + msg, 'err');
 });
 
 window.addEventListener('unhandledrejection', (event) => {
   const reason = event?.reason;
   const msg = reason?.message || String(reason || 'Unhandled rejection');
+  const stagePrefix = isBootPhase ? '[부트 단계 실패] ' : '[런타임 실패] ';
   console.error('Unhandled rejection:', reason);
-  toast('비동기 에러: ' + msg, 'err');
+  toast(stagePrefix + '비동기 에러: ' + msg, 'err');
 });
 
 window.LL = {
@@ -153,4 +176,16 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-bootAuth();
+try {
+  const bootAuthResult = bootAuth();
+  if (bootAuthResult && typeof bootAuthResult.finally === 'function') {
+    bootAuthResult.finally(() => {
+      isBootPhase = false;
+    });
+  } else {
+    isBootPhase = false;
+  }
+} catch (error) {
+  console.error('bootAuth failed:', error);
+  isBootPhase = false;
+}
