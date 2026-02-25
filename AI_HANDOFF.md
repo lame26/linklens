@@ -58,6 +58,20 @@ Worker는 요청마다 Bearer 토큰 검증 및 환경변수에 의존합니다.
 - `moveToTrash`: DB row 삭제 + `local state.trash`로 이동
 - 브라우저/기기 변경 시 휴지통 미노출 가능
 
+
+### D. CSP `unsafe-eval` 경고(콘솔)
+다음 메시지 1건만 있고 기능이 정상 동작하면, 애플리케이션 코드 결함이 아니라 **브라우저 확장 프로그램/외부 스크립트** 영향일 수 있습니다.
+- 메시지 예: `Content Security Policy ... blocks the use of eval`
+
+확인 순서(초보자용):
+1. 크롬 시크릿 창(확장 프로그램 비활성)에서 동일 동작 재현
+2. 같은 기능이 정상 동작하면 확장 프로그램 영향으로 판단
+3. 그래도 재현되면 Network에서 실패 요청 status/body를 수집해 Worker/Supabase 점검으로 진행
+
+주의:
+- 문제 회피를 위해 CSP에 `unsafe-eval`을 추가하지 않습니다(보안 위험).
+- 우리 코드에서는 `eval`, `new Function`, 문자열 기반 `setTimeout/setInterval`을 사용하지 않는지 먼저 확인합니다.
+
 ## 5) 다음 턴 필수 점검 체크리스트
 ### Cloudflare Worker Variables
 - `SUPABASE_URL` (Text)
