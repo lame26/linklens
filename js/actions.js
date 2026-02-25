@@ -139,11 +139,14 @@ export async function saveArticle() {
 
   cancelUrlAnalysis();
 
-  // 이미 savingArticle 상태라면 이전 상태가 정리 안 된 것 — 강제 초기화
+  // 이미 savingArticle 상태라면: 실제 저장 진행 중이면 중복 실행 차단,
+  // 플래그만 남은 비정상 상태면 강제로 복구 후 진행
   if (state.savingArticle) {
+    const prevBtn = document.querySelector('#addOverlay .btn-primary');
+    if (prevBtn?.disabled) return;
+
     state.savingArticle = false;
     stopLoading();
-    const prevBtn = document.querySelector('#addOverlay .btn-primary');
     if (prevBtn) {
       prevBtn.disabled = false;
       prevBtn.innerHTML = '저장';
