@@ -67,32 +67,6 @@ window.addEventListener('unhandledrejection', (event) => {
   toast('비동기 에러: ' + msg, 'err');
 });
 
-window.LL = {
-  reload: async () => {
-    await loadFromDB();
-    refresh();
-  },
-  state: () => ({
-    auth: { ...authState, userId: state.currentUser?.id || null },
-    counts: {
-      articles: state.articles.length,
-      collections: state.collections.length,
-      trash: state.trash.length,
-    },
-    filter: {
-      filter: state.filter,
-      catFilter: state.catFilter,
-      colFilter: state.colFilter,
-      sortMode: state.sortMode,
-      viewMode: state.viewMode,
-      unreadOnly: state.unreadOnly,
-      searchQ: state.searchQ,
-    },
-  }),
-  analyzeUrl: (url) => analyzeWithAI(url),
-  previewUrl: (url) => previewWithAI(url),
-};
-
 Object.assign(window, {
   switchTab,
   authEnter,
@@ -136,20 +110,36 @@ Object.assign(window, {
   emptyTrash,
 });
 
-function bootstrapApp() {
-  initThemeUI();
-  refresh();
-  bindAuthUIEvents();
-  bindAuthStateChange();
-  bootAuth();
-}
+window.LL = {
+  reload: async () => {
+    await loadFromDB();
+    refresh();
+  },
+  state: () => ({
+    auth: { ...authState, userId: state.currentUser?.id || null },
+    counts: {
+      articles: state.articles.length,
+      collections: state.collections.length,
+      trash: state.trash.length,
+    },
+    filter: {
+      filter: state.filter,
+      catFilter: state.catFilter,
+      colFilter: state.colFilter,
+      sortMode: state.sortMode,
+      viewMode: state.viewMode,
+      unreadOnly: state.unreadOnly,
+      searchQ: state.searchQ,
+    },
+  }),
+  analyzeUrl: (url) => analyzeWithAI(url),
+  previewUrl: (url) => previewWithAI(url),
+};
 
-try {
-  bootstrapApp();
-} catch (e) {
-  console.error('bootstrap failed:', e);
-  toast('초기화 실패: ' + (e?.message || e), 'err');
-}
+try { initThemeUI(); } catch (e) { console.error('initThemeUI failed:', e); }
+try { refresh(); } catch (e) { console.error('refresh failed:', e); }
+try { bindAuthUIEvents(); } catch (e) { console.error('bindAuthUIEvents failed:', e); }
+try { bindAuthStateChange(); } catch (e) { console.error('bindAuthStateChange failed:', e); }
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
@@ -162,3 +152,5 @@ document.addEventListener('keydown', (e) => {
     document.getElementById('searchInput').focus();
   }
 });
+
+bootAuth();
