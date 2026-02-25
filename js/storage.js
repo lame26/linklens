@@ -55,7 +55,7 @@ export function setTrash(trash) {
 export function clearAppStorage() {
   try {
     Object.keys(localStorage).forEach((k) => {
-      if (k.startsWith('sb-') || k.startsWith('supabase') || k === 'll_auth' || k.startsWith('ll_')) {
+      if (k.startsWith('sb-') || k.startsWith('supabase') || k === 'll_auth') {
         localStorage.removeItem(k);
       }
     });

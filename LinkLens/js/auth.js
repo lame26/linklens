@@ -4,6 +4,8 @@ import { clearAppStorage } from './storage.js';
 import { loadFromDB } from './db.js';
 import { refresh, toast } from './ui.js';
 
+let sawInitialSession = false;
+
 function showAuthErr(msg) {
   const el = document.getElementById('authErr');
   el.textContent = msg;
@@ -146,6 +148,8 @@ export function bindAuthUIEvents() {
 }
 
 export async function bootAuth() {
+  if (sawInitialSession) return;
+
   if (!sb) {
     clearUser();
     authState.initialized = true;
@@ -160,7 +164,7 @@ export async function bootAuth() {
   } catch (e) {
     console.error('bootAuth failed:', e);
     toast('세션 확인 실패: ' + (e.message || e), 'err');
-    clearUser();
+    if (!state.currentUser) clearUser();
   } finally {
     authState.initialized = true;
     authState.phase = state.currentUser ? 'signed_in' : 'signed_out';
@@ -172,6 +176,7 @@ export function bindAuthStateChange() {
   sb.auth.onAuthStateChange(async (event, session) => {
     try {
       if (event === 'INITIAL_SESSION') {
+        sawInitialSession = true;
         authState.initialized = true;
         await handleSession(session, { forceReload: state.articles.length === 0 });
         authState.phase = session?.user ? 'signed_in' : 'signed_out';

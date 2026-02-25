@@ -123,6 +123,8 @@ export async function saveArticle() {
     return;
   }
 
+  if (state.savingArticle) return;
+
   const url = document.getElementById('fUrl').value.trim();
   if (!url) {
     toast('URL을 입력해주세요', 'err');
@@ -168,44 +170,46 @@ export async function saveArticle() {
   };
 
   let savedId = null;
+  state.savingArticle = true;
+
   try {
     savedId = await dbIns(a);
+    a.id = savedId;
+    state.articles.unshift(a);
+    refresh();
+    closeAddModal();
+    toast('저장되었습니다. AI 분석 중입니다...', 'ok');
   } catch (e) {
     console.error('dbIns failed:', e);
     toast('저장 실패: ' + e.message, 'err');
+    return;
+  } finally {
     stopLoading();
     btn.disabled = false;
     btn.innerHTML = btnOriginal;
-    return;
+    state.savingArticle = false;
   }
 
-  a.id = savedId;
-  state.articles.unshift(a);
-  refresh();
-  closeAddModal();
-  stopLoading();
-  btn.disabled = false;
-  btn.innerHTML = btnOriginal;
-  toast('저장되었습니다. AI 분석 중입니다...', 'ok');
-
-  try {
-    const result = await analyzeWithAI(url);
-    const finalTitle = titleInp || result.title || getDomain(url) || url;
-    const updates = {
-      title: finalTitle,
-      summary: result.summary || '',
-      keywords: result.keywords || [],
-      category: result.category || cat,
-    };
-    await dbUpd(savedId, updates);
-    const art = state.articles.find((x) => x.id === savedId);
-    if (art) Object.assign(art, updates);
-    refresh();
-    toast('AI 분석이 완료되었습니다', 'ok');
-  } catch (e) {
-    console.warn('AI 분석 실패:', e.message);
-    toast('AI 분석 실패: 잠시 후 다시 시도해주세요', 'err');
-  }
+  (async () => {
+    try {
+      const result = await analyzeWithAI(url);
+      const finalTitle = titleInp || result.title || getDomain(url) || url;
+      const updates = {
+        title: finalTitle,
+        summary: result.summary || '',
+        keywords: result.keywords || [],
+        category: result.category || cat,
+      };
+      await dbUpd(savedId, updates);
+      const art = state.articles.find((x) => x.id === savedId);
+      if (art) Object.assign(art, updates);
+      refresh();
+      toast('AI 분석이 완료되었습니다', 'ok');
+    } catch (e) {
+      console.warn('AI 분석 실패:', e.message);
+      toast('AI 분석에 실패했지만 링크는 저장되었습니다', 'info');
+    }
+  })();
 }
 
 export function renderColorPicker(selectedColor) {
