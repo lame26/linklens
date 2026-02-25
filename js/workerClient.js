@@ -1,5 +1,5 @@
 ﻿import { WORKER_BASE_URL } from './config.js';
-import { getAccessToken } from './supabase.js';
+import { getAccessToken } from '../supabase.js';
 import { toast } from './ui.js';
 
 const ANALYZE_URL = WORKER_BASE_URL + '/analyze';

@@ -1,4 +1,4 @@
-﻿import { sb, refreshSession } from './supabase.js';
+﻿import { sb, refreshSession } from '../supabase.js';
 import { state } from './state.js';
 import { toast } from './ui.js';
 
