@@ -21,6 +21,7 @@ export const state = {
   urlDebounce: null,
   urlAbortCtrl: null,
   toastTimer: null,
+  savingArticle: false,
 };
 
 export const authState = {

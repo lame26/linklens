@@ -4,34 +4,11 @@ import { clearAppStorage } from './storage.js';
 import { loadFromDB } from './db.js';
 import { refresh, toast } from './ui.js';
 
-function resolveAuthErrMessage(msg, category = 'general') {
-  const raw = typeof msg === 'string' ? msg : msg?.message || String(msg || '');
-  const knownMessages = {
-    'Invalid login credentials': '이메일 또는 비밀번호가 올바르지 않습니다',
-    'User already registered': '이미 가입된 이메일입니다',
-    'Password should be at least 6 characters': '비밀번호는 6자 이상이어야 합니다',
-  };
+let sawInitialSession = false;
 
-  if (knownMessages[raw]) return knownMessages[raw];
-
-  if (category === 'sdk' || /supabase is not defined|createClient|Cannot read properties of undefined \(reading 'auth'\)/i.test(raw)) {
-    return 'Supabase SDK를 불러오지 못했습니다. 페이지를 새로고침해주세요';
-  }
-
-  if (category === 'session' || /getSession|session/i.test(raw)) {
-    return '세션 조회에 실패했습니다. 잠시 후 다시 시도해주세요';
-  }
-
-  if (category === 'credentials' || /invalid login credentials|email or password|이메일 또는 비밀번호/i.test(raw)) {
-    return '이메일 또는 비밀번호가 올바르지 않습니다';
-  }
-
-  return raw || '인증 처리 중 오류가 발생했습니다';
-}
-
-function showAuthErr(msg, category = 'general') {
+function showAuthErr(msg) {
   const el = document.getElementById('authErr');
-  el.textContent = resolveAuthErrMessage(msg, category);
+  el.textContent = msg;
   el.className = 'auth-msg err show';
   document.getElementById('authOk').className = 'auth-msg ok';
 }
@@ -76,13 +53,8 @@ async function handleSession(session, { forceReload = false } = {}) {
   const shouldLoad = forceReload || state.currentUser?.id !== nextUserId || state.articles.length === 0;
   setUser(session.user);
   if (shouldLoad) {
-    try {
-      await loadFromDB();
-      refresh();
-    } catch (e) {
-      console.error('loadFromDB failed:', e);
-      toast('데이터 로드 실패', 'err');
-    }
+    await loadFromDB();
+    refresh();
   }
 }
 
@@ -102,8 +74,7 @@ export function authEnter(e) {
 
 export async function doAuth() {
   if (!sb) {
-    console.error('[LinkLens] Supabase client unavailable');
-    showAuthErr('인증 서비스를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
+    showAuthErr('인증 서비스를 불러올 수 없습니다. 페이지를 새로고침 해주세요.');
     return;
   }
   const email = document.getElementById('authEmail').value.trim();
@@ -130,10 +101,12 @@ export async function doAuth() {
       return;
     }
   } catch (e) {
-    const category = /supabase is not defined|createClient|Cannot read properties of undefined \(reading 'auth'\)/i.test(e?.message || '')
-      ? 'sdk'
-      : 'credentials';
-    showAuthErr(e, category);
+    const msgs = {
+      'Invalid login credentials': '이메일 또는 비밀번호가 올바르지 않습니다',
+      'User already registered': '이미 가입된 이메일입니다',
+      'Password should be at least 6 characters': '비밀번호는 6자 이상이어야 합니다',
+    };
+    showAuthErr(msgs[e.message] || e.message);
   } finally {
     btn.disabled = false;
     btn.textContent = btnLabel;
@@ -141,15 +114,6 @@ export async function doAuth() {
 }
 
 export async function doSignOut() {
-  if (!sb) {
-    console.error('[LinkLens] Supabase client unavailable');
-    clearAppStorage();
-    clearUser();
-    authState.phase = 'signed_out';
-    authState.initialized = true;
-    toast('인증 서비스를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.', 'err');
-    return;
-  }
   document.getElementById('userDropdown').classList.remove('open');
   authState.phase = 'signed_out';
   authState.initialized = false;
@@ -163,6 +127,7 @@ export async function doSignOut() {
   refresh();
   toast('로그아웃되었습니다', 'info');
 
+  if (!sb) return;
   try {
     await sb.auth.signOut({ scope: 'local' });
   } catch (e) {
@@ -177,29 +142,29 @@ export function toggleUserMenu() {
 export function bindAuthUIEvents() {
   document.addEventListener('click', (e) => {
     if (!e.target.closest('.user-btn')) {
-      document.getElementById('userDropdown').classList.remove('open');
+      document.getElementById('userDropdown')?.classList.remove('open');
     }
   });
 }
 
 export async function bootAuth() {
+  if (sawInitialSession) return;
+
   if (!sb) {
-    console.error('[LinkLens] Supabase client unavailable');
     clearUser();
     authState.initialized = true;
     authState.phase = 'signed_out';
-    toast('인증 서비스를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.', 'err');
+    console.error('[LinkLens] Supabase client unavailable — check CDN loading');
     return;
   }
-
   try {
     const { data, error } = await sb.auth.getSession();
     if (error) throw error;
     await handleSession(data?.session, { forceReload: true });
   } catch (e) {
     console.error('bootAuth failed:', e);
-    clearUser();
-    showAuthErr('서비스 초기화 실패, 새로고침 후 재시도');
+    toast('세션 확인 실패: ' + (e.message || e), 'err');
+    if (!state.currentUser) clearUser();
   } finally {
     authState.initialized = true;
     authState.phase = state.currentUser ? 'signed_in' : 'signed_out';
@@ -207,14 +172,11 @@ export async function bootAuth() {
 }
 
 export function bindAuthStateChange() {
-  if (!sb) {
-    console.error('[LinkLens] Supabase client unavailable');
-    return;
-  }
-
+  if (!sb) return;
   sb.auth.onAuthStateChange(async (event, session) => {
     try {
       if (event === 'INITIAL_SESSION') {
+        sawInitialSession = true;
         authState.initialized = true;
         await handleSession(session, { forceReload: state.articles.length === 0 });
         authState.phase = session?.user ? 'signed_in' : 'signed_out';
