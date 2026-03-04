@@ -114,6 +114,19 @@ async function verifySupabaseUser(token, env) {
   }
 }
 
+async function fetchWithTimeout(url, options, timeoutMs) {
+  let tid = null;
+  const timeout = new Promise((_, reject) => {
+    tid = setTimeout(() => reject(new Error(`fetch timeout (${timeoutMs}ms)`)), timeoutMs);
+  });
+
+  try {
+    return await Promise.race([fetch(url, options), timeout]);
+  } finally {
+    if (tid) clearTimeout(tid);
+  }
+}
+
 async function handlePreview(articleUrl, request, env) {
   try {
     const htmlRes = await fetch(articleUrl, {
@@ -188,34 +201,62 @@ async function handleAnalyze(articleUrl, apiKey, request, env) {
 
   let aiRes;
   try {
-    aiRes = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + apiKey,
+    aiRes = await fetchWithTimeout(
+      'https://api.openai.com/v1/chat/completions',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + apiKey,
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          temperature: 0.3,
+          max_tokens: 600,
+          response_format: { type: 'json_object' },
+          messages: [
+            {
+              role: 'system',
+              content:
+                '반드시 JSON 객체만 반환하세요. 키: title, summary, keywords, category. category는 tech|economy|ai|science|politics|default 중 하나.',
+            },
+            { role: 'user', content: prompt },
+          ],
+        }),
       },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        temperature: 0.3,
-        max_tokens: 600,
-        response_format: { type: 'json_object' },
-        messages: [
-          {
-            role: 'system',
-            content:
-              '반드시 JSON 객체만 반환하세요. 키: title, summary, keywords, category. category는 tech|economy|ai|science|politics|default 중 하나.',
-          },
-          { role: 'user', content: prompt },
-        ],
-      }),
-    });
+      20000,
+    );
   } catch (e) {
-    return json({ error: 'OpenAI connection failed: ' + e.message }, 500, request, env);
+    console.warn('OpenAI connection failed:', e.message);
+    return json(
+      {
+        title: fetchedTitle || '',
+        summary: '',
+        keywords: [],
+        category: 'default',
+        parse_failed: true,
+      },
+      200,
+      request,
+      env,
+    );
   }
 
   if (!aiRes.ok) {
     const errText = await aiRes.text();
-    return json({ error: 'OpenAI ' + aiRes.status + ': ' + errText }, 500, request, env);
+    console.warn('OpenAI non-OK response:', aiRes.status, errText.slice(0, 160));
+    return json(
+      {
+        title: fetchedTitle || '',
+        summary: '',
+        keywords: [],
+        category: 'default',
+        parse_failed: true,
+      },
+      200,
+      request,
+      env,
+    );
   }
 
   let parsed = {};
