@@ -1,6 +1,6 @@
 ﻿import { state, authState } from './state.js';
 import { sb } from './supabase.js';
-import { clearAppStorage, clearArticleCache } from './storage.js';
+import { clearAppStorage, clearArticleCache, getArticleCache } from './storage.js';
 import { loadFromDB } from './db.js';
 import { refresh, toast } from './ui.js';
 
@@ -55,6 +55,13 @@ async function handleSession(session, { forceReload = false } = {}) {
   setUser(session.user);
   if (shouldLoad) {
     if (loadingSession) return; // 이미 로딩 중이면 무시
+    const cached = getArticleCache(nextUserId);
+    const hasCached = (cached.articles || []).length > 0 || (cached.collections || []).length > 0;
+    if (state.articles.length === 0 && hasCached) {
+      state.articles = cached.articles || [];
+      state.collections = cached.collections || [];
+      refresh();
+    }
     loadingSession = true;
     try {
       await loadFromDB();
