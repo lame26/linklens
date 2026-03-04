@@ -1,5 +1,5 @@
 ﻿import { state, authState } from './state.js';
-import { sb } from './supabase.js';
+import { sb, refreshSession } from './supabase.js';
 import { clearAppStorage, clearArticleCache, getArticleCache } from './storage.js';
 import { loadFromDB } from './db.js';
 import { refresh, toast } from './ui.js';
@@ -75,6 +75,9 @@ async function handleSession(session, { forceReload = false } = {}) {
     }
     loadingSession = true;
     try {
+      if (state.articles.length === 0) {
+        try { await refreshSession(); } catch {}
+      }
       await loadFromDB();
       refresh();
       // 초기 연결 지연으로 캐시/빈 상태만 보인 경우 곧바로 한 번 더 재동기화
