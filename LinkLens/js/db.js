@@ -69,6 +69,7 @@ function toDB(a) {
 
 export async function loadFromDB() {
   const userId = await requireAuthContext();
+  const cachedBefore = getArticleCache(userId);
   const runLoad = async () => {
     const [artsRes, colsRes] = await withTimeout(
       Promise.all([
@@ -80,8 +81,21 @@ export async function loadFromDB() {
     );
     if (artsRes.error) throw artsRes.error;
     if (colsRes.error) throw colsRes.error;
-    state.articles = (artsRes.data || []).map(mapArticleRow);
-    state.collections = (colsRes.data || []).map(mapCollectionRow);
+    const loadedArticles = (artsRes.data || []).map(mapArticleRow);
+    const loadedCollections = (colsRes.data || []).map(mapCollectionRow);
+    const hasLoaded = loadedArticles.length > 0 || loadedCollections.length > 0;
+    const hasCached = (cachedBefore.articles || []).length > 0 || (cachedBefore.collections || []).length > 0;
+
+    // 초기 세션 복구 타이밍에 간헐적으로 빈 결과가 떨어지는 경우 캐시를 유지한다.
+    if (!hasLoaded && hasCached) {
+      state.articles = cachedBefore.articles || [];
+      state.collections = cachedBefore.collections || [];
+      toast('동기화 지연으로 이전 목록을 유지합니다', 'info');
+      return;
+    }
+
+    state.articles = loadedArticles;
+    state.collections = loadedCollections;
     setArticleCache(userId, { articles: state.articles, collections: state.collections });
   };
 

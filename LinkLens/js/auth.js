@@ -134,7 +134,7 @@ export async function doSignOut() {
     try {
       await Promise.race([
         sb.auth.signOut({ scope: 'local' }),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('signOut timeout')), 5000)),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('signOut timeout')), 1200)),
       ]);
     } catch (e) {
       console.warn('signOut failed:', e);
@@ -229,6 +229,9 @@ export function bindAuthStateChange() {
       if (event === 'TOKEN_REFRESHED') {
         if (session?.user && state.currentUser?.id === session.user.id) {
           setUser(session.user);
+          if (state.articles.length === 0 && !loadingSession) {
+            await handleSession(session, { forceReload: true });
+          }
         }
       }
     } catch (e) {
