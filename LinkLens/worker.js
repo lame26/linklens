@@ -273,16 +273,58 @@ function parseAllowedOrigins(env) {
     .filter(Boolean);
 }
 
+function normalizeOrigin(input) {
+  try {
+    return new URL(input).origin;
+  } catch {
+    return '';
+  }
+}
+
+function matchesAllowedOrigin(origin, rule) {
+  if (!origin || !rule) return false;
+  if (rule === '*') return true;
+  const normalizedOrigin = normalizeOrigin(origin);
+  if (!normalizedOrigin) return false;
+
+  if (!rule.includes('*')) {
+    return normalizedOrigin === normalizeOrigin(rule);
+  }
+
+  const m = rule.match(/^(https?:\/\/)\*\.(.+)$/i);
+  if (!m) return false;
+
+  const protocol = m[1].toLowerCase();
+  const suffix = '.' + m[2].toLowerCase();
+  try {
+    const u = new URL(normalizedOrigin);
+    return u.protocol.toLowerCase() === protocol && u.hostname.toLowerCase().endsWith(suffix);
+  } catch {
+    return false;
+  }
+}
+
+function getDefaultAllowedOrigins() {
+  return [
+    'https://linklens.pages.dev',
+    'https://linklens2.pages.dev',
+    'http://localhost:8787',
+    'http://127.0.0.1:8787',
+  ];
+}
+
 function isOriginAllowed(origin, env) {
-  const allowed = parseAllowedOrigins(env);
-  if (!allowed.length) return true;
-  return !!origin && allowed.includes(origin);
+  const configured = parseAllowedOrigins(env);
+  const allowed = configured.length ? configured : getDefaultAllowedOrigins();
+  return allowed.some((rule) => matchesAllowedOrigin(origin, rule));
 }
 
 function resolveAllowOrigin(origin, env) {
-  const allowed = parseAllowedOrigins(env);
-  if (!allowed.length) return '*';
-  if (origin && allowed.includes(origin)) return origin;
+  const configured = parseAllowedOrigins(env);
+  const allowed = configured.length ? configured : getDefaultAllowedOrigins();
+  if (allowed.some((rule) => matchesAllowedOrigin(origin, rule))) {
+    return normalizeOrigin(origin);
+  }
   return '';
 }
 

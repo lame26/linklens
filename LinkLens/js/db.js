@@ -1,6 +1,17 @@
-﻿import { sb, refreshSession } from '../supabase.js';
+import { sb, refreshSession } from './supabase.js';
 import { state } from './state.js';
 import { toast } from './ui.js';
+
+const DB_TIMEOUT_MS = 12000;
+
+function withTimeout(promise, message, ms = DB_TIMEOUT_MS) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      setTimeout(() => reject(new Error(message)), ms);
+    }),
+  ]);
+}
 
 function mapArticleRow(r) {
   return {
@@ -57,10 +68,13 @@ function toDB(a) {
 export async function loadFromDB() {
   const userId = await requireAuthContext();
   const runLoad = async () => {
-    const [artsRes, colsRes] = await Promise.all([
-      sb.from('articles').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
-      sb.from('collections').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
-    ]);
+    const [artsRes, colsRes] = await withTimeout(
+      Promise.all([
+        sb.from('articles').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
+        sb.from('collections').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
+      ]),
+      'DB 조회 시간이 초과되었습니다. 네트워크 상태를 확인해주세요.',
+    );
     if (artsRes.error) throw artsRes.error;
     if (colsRes.error) throw colsRes.error;
     state.articles = (artsRes.data || []).map(mapArticleRow);
@@ -92,7 +106,10 @@ export async function loadFromDB() {
 export async function dbIns(a) {
   const userId = await requireAuthContext();
   const payload = { ...toDB(a), user_id: userId };
-  const { data, error } = await sb.from('articles').insert(payload).select().single();
+  const { data, error } = await withTimeout(
+    sb.from('articles').insert(payload).select().single(),
+    '저장 요청 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.',
+  );
   if (error) throw new Error(error.message + ' (code:' + error.code + ')');
   if (!data) throw new Error('저장 실패 - Supabase 응답이 없습니다');
   return data.id;
@@ -100,37 +117,50 @@ export async function dbIns(a) {
 
 export async function dbUpd(id, f) {
   const userId = await requireAuthContext();
-  const { error } = await sb.from('articles').update(f).eq('id', id).eq('user_id', userId);
+  const { error } = await withTimeout(
+    sb.from('articles').update(f).eq('id', id).eq('user_id', userId),
+    '업데이트 요청 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.',
+  );
   if (error) throw error;
 }
-
 
 export async function dbDel(id) {
   const userId = await requireAuthContext();
-  const { error } = await sb.from('articles').delete().eq('id', id).eq('user_id', userId);
+  const { error } = await withTimeout(
+    sb.from('articles').delete().eq('id', id).eq('user_id', userId),
+    '삭제 요청 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.',
+  );
   if (error) throw error;
 }
 
-
 export async function dbInsCol(c) {
   const userId = await requireAuthContext();
-  const { data, error } = await sb
-    .from('collections')
-    .insert({ user_id: userId, name: c.name, color: c.color })
-    .select()
-    .single();
+  const { data, error } = await withTimeout(
+    sb
+      .from('collections')
+      .insert({ user_id: userId, name: c.name, color: c.color })
+      .select()
+      .single(),
+    '컬렉션 저장 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.',
+  );
   if (error) throw error;
   return data.id;
 }
 
 export async function dbUpdCol(id, f) {
   const userId = await requireAuthContext();
-  const { error } = await sb.from('collections').update(f).eq('id', id).eq('user_id', userId);
+  const { error } = await withTimeout(
+    sb.from('collections').update(f).eq('id', id).eq('user_id', userId),
+    '컬렉션 업데이트 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.',
+  );
   if (error) throw error;
 }
 
 export async function dbDelCol(id) {
   const userId = await requireAuthContext();
-  const { error } = await sb.from('collections').delete().eq('id', id).eq('user_id', userId);
+  const { error } = await withTimeout(
+    sb.from('collections').delete().eq('id', id).eq('user_id', userId),
+    '컬렉션 삭제 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.',
+  );
   if (error) throw error;
 }
