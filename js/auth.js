@@ -1,6 +1,6 @@
 ﻿import { state, authState } from './state.js';
 import { sb } from './supabase.js';
-import { clearAppStorage } from './storage.js';
+import { clearAppStorage, clearArticleCache } from './storage.js';
 import { loadFromDB } from './db.js';
 import { refresh, toast } from './ui.js';
 
@@ -130,11 +130,15 @@ export async function doAuth() {
 export async function doSignOut() {
   document.getElementById('userDropdown').classList.remove('open');
 
-  if (!sb) return;
-  try {
-    await sb.auth.signOut({ scope: 'local' });
-  } catch (e) {
-    console.warn('signOut failed:', e);
+  if (sb) {
+    try {
+      await Promise.race([
+        sb.auth.signOut({ scope: 'local' }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('signOut timeout')), 5000)),
+      ]);
+    } catch (e) {
+      console.warn('signOut failed:', e);
+    }
   }
 
   // signOut 완료 후에 상태 초기화 (SIGNED_OUT 이벤트보다 먼저 처리)
@@ -142,6 +146,8 @@ export async function doSignOut() {
   authState.initialized = false;
   sawInitialSession = false;
 
+  const uid = state.currentUser?.id || authState.lastUserId;
+  if (uid) clearArticleCache(uid);
   clearAppStorage();
 
   state.currentUser = null;

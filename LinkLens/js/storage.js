@@ -52,10 +52,31 @@ export function setTrash(trash) {
   setJson('ll_trash', trash);
 }
 
+function cacheKey(userId) {
+  return `ll_cache_${userId || 'anon'}`;
+}
+
+export function getArticleCache(userId) {
+  return getJson(cacheKey(userId), { articles: [], collections: [], ts: 0 });
+}
+
+export function setArticleCache(userId, payload) {
+  if (!userId) return;
+  setJson(cacheKey(userId), {
+    articles: Array.isArray(payload?.articles) ? payload.articles : [],
+    collections: Array.isArray(payload?.collections) ? payload.collections : [],
+    ts: Date.now(),
+  });
+}
+
+export function clearArticleCache(userId) {
+  safeStorage.removeItem(cacheKey(userId));
+}
+
 export function clearAppStorage() {
   try {
     Object.keys(localStorage).forEach((k) => {
-      if (k.startsWith('sb-') || k.startsWith('supabase') || k === 'll_auth') {
+      if (k.startsWith('sb-') || k.startsWith('supabase') || k === 'll_auth' || k.startsWith('ll_cache_')) {
         localStorage.removeItem(k);
       }
     });

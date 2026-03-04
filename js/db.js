@@ -1,6 +1,7 @@
 import { sb, refreshSession } from './supabase.js';
 import { state } from './state.js';
 import { toast } from './ui.js';
+import { getArticleCache, setArticleCache } from './storage.js';
 
 const DB_READ_TIMEOUT_MS = 30000;
 const DB_WRITE_TIMEOUT_MS = 12000;
@@ -81,12 +82,23 @@ export async function loadFromDB() {
     if (colsRes.error) throw colsRes.error;
     state.articles = (artsRes.data || []).map(mapArticleRow);
     state.collections = (colsRes.data || []).map(mapCollectionRow);
+    setArticleCache(userId, { articles: state.articles, collections: state.collections });
   };
 
   try {
     await runLoad();
   } catch (e) {
     const msg = (e?.message || String(e)).toLowerCase();
+    const isTimeout = msg.includes('시간이 초과');
+    if (isTimeout) {
+      const cached = getArticleCache(userId);
+      if ((cached.articles || []).length || (cached.collections || []).length) {
+        state.articles = cached.articles || [];
+        state.collections = cached.collections || [];
+        toast('네트워크 지연으로 캐시된 목록을 표시합니다', 'info');
+        return;
+      }
+    }
     const authErr = msg.includes('jwt') || msg.includes('token') || msg.includes('refresh');
     if (authErr) {
       try {

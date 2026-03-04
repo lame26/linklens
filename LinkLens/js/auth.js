@@ -1,6 +1,6 @@
 ﻿import { state, authState } from './state.js';
 import { sb } from './supabase.js';
-import { clearAppStorage } from './storage.js';
+import { clearAppStorage, clearArticleCache } from './storage.js';
 import { loadFromDB } from './db.js';
 import { refresh, toast } from './ui.js';
 
@@ -132,7 +132,10 @@ export async function doSignOut() {
 
   if (sb) {
     try {
-      await sb.auth.signOut({ scope: 'local' });
+      await Promise.race([
+        sb.auth.signOut({ scope: 'local' }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('signOut timeout')), 5000)),
+      ]);
     } catch (e) {
       console.warn('signOut failed:', e);
     }
@@ -143,6 +146,8 @@ export async function doSignOut() {
   authState.initialized = false;
   sawInitialSession = false;
 
+  const uid = state.currentUser?.id || authState.lastUserId;
+  if (uid) clearArticleCache(uid);
   clearAppStorage();
 
   state.currentUser = null;

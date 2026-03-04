@@ -1,5 +1,5 @@
 ﻿import { state, CAT_TAG_CLASS, CAT_LABEL, STATUS_CLASS, STATUS_LABEL, SVG } from './state.js';
-import { setTheme as saveTheme } from './storage.js';
+import { setArticleCache, setTheme as saveTheme } from './storage.js';
 
 export function escapeHtml(text) {
   const s = String(text ?? '');
@@ -260,4 +260,10 @@ export function refresh() {
   renderArticles();
   updateStats();
   updatePlanBar();
+  if (state.currentUser?.id) {
+    setArticleCache(state.currentUser.id, {
+      articles: state.articles,
+      collections: state.collections,
+    });
+  }
 }
