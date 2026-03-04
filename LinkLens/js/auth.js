@@ -10,6 +10,9 @@ let lastManualSignOutAt = 0;
 let lastSignInAt = 0;
 let relinkRetryTimer = null;
 let bootstrapRetryTimer = null;
+let bootstrapRetryAttempt = 0;
+const BOOTSTRAP_RETRY_INTERVAL_MS = 2500;
+const BOOTSTRAP_RETRY_MAX = 12;
 
 function clearRelinkRetry() {
   if (relinkRetryTimer) {
@@ -23,23 +26,41 @@ function clearBootstrapRetry() {
     clearTimeout(bootstrapRetryTimer);
     bootstrapRetryTimer = null;
   }
+  bootstrapRetryAttempt = 0;
 }
 
 function scheduleBootstrapRetry() {
-  clearBootstrapRetry();
-  bootstrapRetryTimer = setTimeout(async () => {
-    if (!sb || state.currentUser) return;
+  if (bootstrapRetryTimer || state.currentUser) return;
+
+  const run = async () => {
+    bootstrapRetryTimer = null;
+    if (!sb || state.currentUser) {
+      clearBootstrapRetry();
+      return;
+    }
+
+    bootstrapRetryAttempt += 1;
     try {
+      await refreshSession().catch(() => {});
       const { data, error } = await sb.auth.getSession();
-      if (error) return;
-      if (data?.session?.user) {
+      if (!error && data?.session?.user) {
         sawInitialSession = true;
         await handleSession(data.session, { forceReload: true });
         authState.phase = 'signed_in';
         authState.initialized = true;
+        clearBootstrapRetry();
+        return;
       }
     } catch {}
-  }, 2500);
+
+    if (bootstrapRetryAttempt >= BOOTSTRAP_RETRY_MAX) {
+      clearBootstrapRetry();
+      return;
+    }
+    bootstrapRetryTimer = setTimeout(run, BOOTSTRAP_RETRY_INTERVAL_MS);
+  };
+
+  bootstrapRetryTimer = setTimeout(run, BOOTSTRAP_RETRY_INTERVAL_MS);
 }
 
 function showAuthErr(msg) {
