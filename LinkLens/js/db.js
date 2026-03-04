@@ -4,7 +4,7 @@ import { toast } from './ui.js';
 import { getArticleCache, setArticleCache } from './storage.js';
 
 const DB_READ_TIMEOUT_MS = 30000;
-const DB_WRITE_TIMEOUT_MS = 12000;
+const DB_WRITE_TIMEOUT_MS = 22000;
 
 function withTimeout(promise, message, ms) {
   return Promise.race([
@@ -13,6 +13,10 @@ function withTimeout(promise, message, ms) {
       setTimeout(() => reject(new Error(message)), ms);
     }),
   ]);
+}
+
+function isTimeoutError(e) {
+  return String(e?.message || '').includes('시간이 초과');
 }
 
 function mapArticleRow(r) {
@@ -137,14 +141,28 @@ export async function loadFromDB() {
 export async function dbIns(a) {
   const userId = await requireAuthContext();
   const payload = { ...toDB(a), user_id: userId };
-  const { data, error } = await withTimeout(
-    sb.from('articles').insert(payload).select().single(),
-    '저장 요청 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.',
-    DB_WRITE_TIMEOUT_MS,
-  );
-  if (error) throw new Error(error.message + ' (code:' + error.code + ')');
-  if (!data) throw new Error('저장 실패 - Supabase 응답이 없습니다');
-  return data.id;
+  const runInsert = async () =>
+    await withTimeout(
+      sb.from('articles').insert(payload).select().single(),
+      '저장 요청 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.',
+      DB_WRITE_TIMEOUT_MS,
+    );
+
+  try {
+    const { data, error } = await runInsert();
+    if (error) throw new Error(error.message + ' (code:' + error.code + ')');
+    if (!data) throw new Error('저장 실패 - Supabase 응답이 없습니다');
+    return data.id;
+  } catch (e) {
+    if (!isTimeoutError(e)) throw e;
+    try {
+      await refreshSession();
+    } catch {}
+    const { data, error } = await runInsert();
+    if (error) throw new Error(error.message + ' (code:' + error.code + ')');
+    if (!data) throw new Error('저장 실패 - Supabase 응답이 없습니다');
+    return data.id;
+  }
 }
 
 export async function dbUpd(id, f) {
