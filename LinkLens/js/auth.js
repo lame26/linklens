@@ -8,6 +8,14 @@ let sawInitialSession = false;
 let loadingSession = false; // 추가: 동시 loadFromDB 방지
 let lastManualSignOutAt = 0;
 let lastSignInAt = 0;
+let relinkRetryTimer = null;
+
+function clearRelinkRetry() {
+  if (relinkRetryTimer) {
+    clearTimeout(relinkRetryTimer);
+    relinkRetryTimer = null;
+  }
+}
 
 function showAuthErr(msg) {
   const el = document.getElementById('authErr');
@@ -49,6 +57,7 @@ function clearUser() {
 
 async function handleSession(session, { forceReload = false } = {}) {
   if (!session?.user) {
+    clearRelinkRetry();
     clearUser();
     return;
   }
@@ -68,6 +77,18 @@ async function handleSession(session, { forceReload = false } = {}) {
     try {
       await loadFromDB();
       refresh();
+      // 초기 연결 지연으로 캐시/빈 상태만 보인 경우 곧바로 한 번 더 재동기화
+      if (state.articles.length === 0 && hasCached) {
+        clearRelinkRetry();
+        relinkRetryTimer = setTimeout(async () => {
+          try {
+            await loadFromDB();
+            refresh();
+          } catch {}
+        }, 2500);
+      } else {
+        clearRelinkRetry();
+      }
     } finally {
       loadingSession = false;
     }
@@ -159,6 +180,7 @@ export async function doSignOut() {
   const uid = state.currentUser?.id || authState.lastUserId;
   if (uid) clearArticleCache(uid);
   clearAppStorage();
+  clearRelinkRetry();
 
   state.currentUser = null;
   state.articles = [];
@@ -237,6 +259,7 @@ export function bindAuthStateChange() {
         // doSignOut()이 이미 처리했으면 무시 (로그아웃 후 바로 로그인 시 덮어쓰기 방지)
         if (authState.phase === 'signed_out') return;
         clearUser();
+        clearRelinkRetry();
         authState.phase = 'signed_out';
         authState.initialized = true;
         return;
