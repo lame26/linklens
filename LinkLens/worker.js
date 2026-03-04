@@ -219,12 +219,19 @@ async function handleAnalyze(articleUrl, apiKey, request, env) {
   }
 
   let parsed = {};
+  let parseFailed = false;
+  let rawContent = '';
   try {
     const aiData = await aiRes.json();
-    const content = aiData.choices?.[0]?.message?.content || '{}';
-    parsed = JSON.parse(content);
+    rawContent = aiData.choices?.[0]?.message?.content || '{}';
+    parsed = parseAiJson(rawContent);
+    if (!parsed) {
+      parseFailed = true;
+      parsed = {};
+    }
   } catch (e) {
-    return json({ error: 'OpenAI response parse failed: ' + e.message }, 500, request, env);
+    parseFailed = true;
+    console.warn('OpenAI response parse failed:', e.message);
   }
 
   return json(
@@ -233,11 +240,37 @@ async function handleAnalyze(articleUrl, apiKey, request, env) {
       summary: parsed.summary || '',
       keywords: Array.isArray(parsed.keywords) ? parsed.keywords : [],
       category: parsed.category || 'default',
+      parse_failed: parseFailed ? true : undefined,
+      raw_preview: parseFailed && rawContent ? String(rawContent).slice(0, 180) : undefined,
     },
     200,
     request,
     env,
   );
+}
+
+function parseAiJson(content) {
+  if (!content) return {};
+  const txt = String(content).trim();
+  try {
+    return JSON.parse(txt);
+  } catch {}
+
+  const fence = txt.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+  if (fence?.[1]) {
+    try {
+      return JSON.parse(fence[1].trim());
+    } catch {}
+  }
+
+  const first = txt.indexOf('{');
+  const last = txt.lastIndexOf('}');
+  if (first >= 0 && last > first) {
+    try {
+      return JSON.parse(txt.slice(first, last + 1));
+    } catch {}
+  }
+  return null;
 }
 
 function extractTitleFromHtml(html) {
