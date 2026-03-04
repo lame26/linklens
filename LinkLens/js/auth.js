@@ -206,7 +206,8 @@ export function bindAuthStateChange() {
       }
 
       if (event === 'SIGNED_IN') {
-        await handleSession(session, { forceReload: true });
+        const userChanged = state.currentUser?.id !== session?.user?.id;
+        await handleSession(session, { forceReload: userChanged || state.articles.length === 0 });
         authState.phase = 'signed_in';
         return;
       }

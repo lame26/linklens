@@ -2,9 +2,10 @@ import { sb, refreshSession } from './supabase.js';
 import { state } from './state.js';
 import { toast } from './ui.js';
 
-const DB_TIMEOUT_MS = 12000;
+const DB_READ_TIMEOUT_MS = 30000;
+const DB_WRITE_TIMEOUT_MS = 12000;
 
-function withTimeout(promise, message, ms = DB_TIMEOUT_MS) {
+function withTimeout(promise, message, ms) {
   return Promise.race([
     promise,
     new Promise((_, reject) => {
@@ -74,6 +75,7 @@ export async function loadFromDB() {
         sb.from('collections').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
       ]),
       'DB 조회 시간이 초과되었습니다. 네트워크 상태를 확인해주세요.',
+      DB_READ_TIMEOUT_MS,
     );
     if (artsRes.error) throw artsRes.error;
     if (colsRes.error) throw colsRes.error;
@@ -109,6 +111,7 @@ export async function dbIns(a) {
   const { data, error } = await withTimeout(
     sb.from('articles').insert(payload).select().single(),
     '저장 요청 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.',
+    DB_WRITE_TIMEOUT_MS,
   );
   if (error) throw new Error(error.message + ' (code:' + error.code + ')');
   if (!data) throw new Error('저장 실패 - Supabase 응답이 없습니다');
@@ -120,6 +123,7 @@ export async function dbUpd(id, f) {
   const { error } = await withTimeout(
     sb.from('articles').update(f).eq('id', id).eq('user_id', userId),
     '업데이트 요청 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.',
+    DB_WRITE_TIMEOUT_MS,
   );
   if (error) throw error;
 }
@@ -129,6 +133,7 @@ export async function dbDel(id) {
   const { error } = await withTimeout(
     sb.from('articles').delete().eq('id', id).eq('user_id', userId),
     '삭제 요청 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.',
+    DB_WRITE_TIMEOUT_MS,
   );
   if (error) throw error;
 }
@@ -142,6 +147,7 @@ export async function dbInsCol(c) {
       .select()
       .single(),
     '컬렉션 저장 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.',
+    DB_WRITE_TIMEOUT_MS,
   );
   if (error) throw error;
   return data.id;
@@ -152,6 +158,7 @@ export async function dbUpdCol(id, f) {
   const { error } = await withTimeout(
     sb.from('collections').update(f).eq('id', id).eq('user_id', userId),
     '컬렉션 업데이트 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.',
+    DB_WRITE_TIMEOUT_MS,
   );
   if (error) throw error;
 }
@@ -161,6 +168,7 @@ export async function dbDelCol(id) {
   const { error } = await withTimeout(
     sb.from('collections').delete().eq('id', id).eq('user_id', userId),
     '컬렉션 삭제 시간이 초과되었습니다. 잠시 후 다시 시도해주세요.',
+    DB_WRITE_TIMEOUT_MS,
   );
   if (error) throw error;
 }
