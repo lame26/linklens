@@ -1,5 +1,7 @@
 ﻿const rateBuckets = new Map();
 // In-memory best-effort limiter: per isolate/process, resets on cold start.
+const SUPABASE_URL_FALLBACK = 'https://kqldruenkpkcravnnsxd.supabase.co';
+const SUPABASE_ANON_KEY_FALLBACK = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtxbGRydWVua3BrY3Jhdm5uc3hkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4NzA0NDUsImV4cCI6MjA4NzQ0NjQ0NX0.AeU-LbWDdnj1pjNU5YFUoDD7Ara0gb241icND70mxr4';
 
 export default {
   async fetch(request, env) {
@@ -87,17 +89,19 @@ function checkRateLimit(userId, limitPerMinute) {
 }
 
 async function verifySupabaseUser(token, env) {
-  if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) {
+  const supabaseUrl = env.SUPABASE_URL || SUPABASE_URL_FALLBACK;
+  const supabaseAnon = env.SUPABASE_ANON_KEY || SUPABASE_ANON_KEY_FALLBACK;
+  if (!supabaseUrl || !supabaseAnon) {
     return { error: 'Worker is missing SUPABASE_URL or SUPABASE_ANON_KEY', status: 500 };
   }
 
-  const url = `${env.SUPABASE_URL}/auth/v1/user`;
+  const url = `${supabaseUrl}/auth/v1/user`;
   let res;
   try {
     res = await fetch(url, {
       method: 'GET',
       headers: {
-        apikey: env.SUPABASE_ANON_KEY,
+        apikey: supabaseAnon,
         Authorization: `Bearer ${token}`,
       },
     });
