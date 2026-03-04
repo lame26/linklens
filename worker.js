@@ -52,16 +52,20 @@ export default {
     if (!articleUrl) {
       return json({ error: 'url is required' }, 400, request, env);
     }
+    const normalizedUrl = normalizeArticleUrl(articleUrl);
+    if (!normalizedUrl) {
+      return json({ error: 'invalid url (http/https only)' }, 400, request, env);
+    }
 
     if (reqUrl.pathname === '/preview') {
-      return handlePreview(articleUrl, request, env);
+      return handlePreview(normalizedUrl, request, env);
     }
 
     if (reqUrl.pathname === '/analyze') {
       if (!env.OPENAI_API_KEY) {
         return json({ error: 'OPENAI_API_KEY is missing' }, 500, request, env);
       }
-      return handleAnalyze(articleUrl, env.OPENAI_API_KEY, request, env);
+      return handleAnalyze(normalizedUrl, env.OPENAI_API_KEY, request, env);
     }
 
     return json({ error: 'Use POST /preview or POST /analyze' }, 404, request, env);
@@ -178,6 +182,12 @@ async function handleAnalyze(articleUrl, apiKey, request, env) {
   if (jinaRes.status === 'fulfilled' && jinaRes.value.ok) {
     try {
       const text = await jinaRes.value.text();
+      const expectedHost = getSource(articleUrl);
+      const jinaUrl = text.match(/^URL:\s*(.+)$/m)?.[1]?.trim() || '';
+      const jinaHost = getSource(jinaUrl);
+      if (jinaHost && expectedHost && !isSameHost(expectedHost, jinaHost)) {
+        throw new Error('Jina host mismatch');
+      }
       if (!fetchedTitle) {
         const m = text.match(/^Title:\s*(.+)$/m);
         if (m) fetchedTitle = m[1].trim();
@@ -331,6 +341,23 @@ function getSource(articleUrl) {
   } catch {
     return '';
   }
+}
+
+function normalizeArticleUrl(articleUrl) {
+  try {
+    const u = new URL(String(articleUrl).trim());
+    if (u.protocol !== 'http:' && u.protocol !== 'https:') return '';
+    return u.toString();
+  } catch {
+    return '';
+  }
+}
+
+function isSameHost(a, b) {
+  const aa = String(a || '').toLowerCase();
+  const bb = String(b || '').toLowerCase();
+  if (!aa || !bb) return false;
+  return aa === bb || aa.endsWith('.' + bb) || bb.endsWith('.' + aa);
 }
 
 function json(body, status = 200, request, env) {

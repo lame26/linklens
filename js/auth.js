@@ -13,6 +13,9 @@ let bootstrapRetryTimer = null;
 let bootstrapRetryAttempt = 0;
 const BOOTSTRAP_RETRY_INTERVAL_MS = 2500;
 const BOOTSTRAP_RETRY_MAX = 12;
+let sessionRecoveryTimer = null;
+let waitingForSessionRecovery = false;
+const SESSION_RECOVERY_WAIT_MS = 35000;
 
 function clearRelinkRetry() {
   if (relinkRetryTimer) {
@@ -27,6 +30,25 @@ function clearBootstrapRetry() {
     bootstrapRetryTimer = null;
   }
   bootstrapRetryAttempt = 0;
+}
+
+function startSessionRecoveryWindow() {
+  waitingForSessionRecovery = true;
+  if (sessionRecoveryTimer) clearTimeout(sessionRecoveryTimer);
+  const authScreen = document.getElementById('authScreen');
+  if (authScreen) authScreen.style.display = 'none';
+  sessionRecoveryTimer = setTimeout(() => {
+    waitingForSessionRecovery = false;
+    if (!state.currentUser) clearUser({ force: true });
+  }, SESSION_RECOVERY_WAIT_MS);
+}
+
+function finishSessionRecoveryWindow() {
+  waitingForSessionRecovery = false;
+  if (sessionRecoveryTimer) {
+    clearTimeout(sessionRecoveryTimer);
+    sessionRecoveryTimer = null;
+  }
 }
 
 function scheduleBootstrapRetry() {
@@ -92,7 +114,8 @@ function setUser(user) {
   document.getElementById('authScreen').style.display = 'none';
 }
 
-function clearUser() {
+function clearUser({ force = false } = {}) {
+  if (waitingForSessionRecovery && !force) return;
   state.currentUser = null;
   state.articles = [];
   state.collections = [];
@@ -107,6 +130,7 @@ async function handleSession(session, { forceReload = false } = {}) {
     clearUser();
     return;
   }
+  finishSessionRecoveryWindow();
   const nextUserId = session.user.id;
   const shouldLoad = forceReload || state.currentUser?.id !== nextUserId || state.articles.length === 0;
   setUser(session.user);
@@ -231,6 +255,7 @@ export async function doSignOut() {
   clearAppStorage();
   clearRelinkRetry();
   clearBootstrapRetry();
+  finishSessionRecoveryWindow();
 
   state.currentUser = null;
   state.articles = [];
@@ -265,6 +290,7 @@ export async function bootAuth() {
     authState.initialized = true;
     return;
   }
+  startSessionRecoveryWindow();
   scheduleBootstrapRetry();
   try {
     const { data, error } = await sb.auth.getSession();
@@ -288,6 +314,7 @@ export function bindAuthStateChange() {
     try {
       if (event === 'INITIAL_SESSION') {
         clearBootstrapRetry();
+        if (session?.user) finishSessionRecoveryWindow();
         sawInitialSession = true;
         authState.initialized = true;
         await handleSession(session, { forceReload: state.articles.length === 0 });
@@ -297,6 +324,7 @@ export function bindAuthStateChange() {
 
       if (event === 'SIGNED_IN') {
         clearBootstrapRetry();
+        finishSessionRecoveryWindow();
         const userChanged = state.currentUser?.id !== session?.user?.id;
         await handleSession(session, { forceReload: userChanged || state.articles.length === 0 });
         lastSignInAt = Date.now();
@@ -315,6 +343,7 @@ export function bindAuthStateChange() {
         clearUser();
         clearRelinkRetry();
         clearBootstrapRetry();
+        finishSessionRecoveryWindow();
         authState.phase = 'signed_out';
         authState.initialized = true;
         return;
