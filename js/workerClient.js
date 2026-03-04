@@ -34,6 +34,12 @@ async function requestWorker(url, body, options = {}) {
   if (!res.ok) {
     let body = '';
     try { body = await res.text(); } catch {}
+    // Worker가 구버전일 때 OpenAI 파싱 실패를 500으로 반환할 수 있다.
+    // 저장 플로우를 깨지 않도록 안전 기본값으로 처리한다.
+    if (res.status === 500 && body.includes('OpenAI response parse failed')) {
+      console.warn('[Worker] parse-failed fallback:', body);
+      return { title: '', summary: '', keywords: [], category: 'default' };
+    }
     console.error(`[Worker] ${res.status} ${res.url}`, body);
     throw new Error(`Worker ${res.status}${body ? ': ' + body.slice(0, 100) : ''}`);
   }
