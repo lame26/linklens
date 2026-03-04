@@ -9,12 +9,37 @@ let loadingSession = false; // 추가: 동시 loadFromDB 방지
 let lastManualSignOutAt = 0;
 let lastSignInAt = 0;
 let relinkRetryTimer = null;
+let bootstrapRetryTimer = null;
 
 function clearRelinkRetry() {
   if (relinkRetryTimer) {
     clearTimeout(relinkRetryTimer);
     relinkRetryTimer = null;
   }
+}
+
+function clearBootstrapRetry() {
+  if (bootstrapRetryTimer) {
+    clearTimeout(bootstrapRetryTimer);
+    bootstrapRetryTimer = null;
+  }
+}
+
+function scheduleBootstrapRetry() {
+  clearBootstrapRetry();
+  bootstrapRetryTimer = setTimeout(async () => {
+    if (!sb || state.currentUser) return;
+    try {
+      const { data, error } = await sb.auth.getSession();
+      if (error) return;
+      if (data?.session?.user) {
+        sawInitialSession = true;
+        await handleSession(data.session, { forceReload: true });
+        authState.phase = 'signed_in';
+        authState.initialized = true;
+      }
+    } catch {}
+  }, 2500);
 }
 
 function showAuthErr(msg) {
@@ -76,7 +101,7 @@ async function handleSession(session, { forceReload = false } = {}) {
     loadingSession = true;
     try {
       if (state.articles.length === 0) {
-        try { await refreshSession(); } catch {}
+        refreshSession().catch(() => {});
       }
       await loadFromDB();
       refresh();
@@ -184,6 +209,7 @@ export async function doSignOut() {
   if (uid) clearArticleCache(uid);
   clearAppStorage();
   clearRelinkRetry();
+  clearBootstrapRetry();
 
   state.currentUser = null;
   state.articles = [];
@@ -218,11 +244,13 @@ export async function bootAuth() {
     authState.initialized = true;
     return;
   }
+  scheduleBootstrapRetry();
   try {
     const { data, error } = await sb.auth.getSession();
     if (error) throw error;
     sawInitialSession = true;
     await handleSession(data?.session, { forceReload: true });
+    clearBootstrapRetry();
   } catch (e) {
     console.error('bootAuth failed:', e);
     toast('세션 확인 실패: ' + (e.message || e), 'err');
@@ -238,6 +266,7 @@ export function bindAuthStateChange() {
   sb.auth.onAuthStateChange(async (event, session) => {
     try {
       if (event === 'INITIAL_SESSION') {
+        clearBootstrapRetry();
         sawInitialSession = true;
         authState.initialized = true;
         await handleSession(session, { forceReload: state.articles.length === 0 });
@@ -246,6 +275,7 @@ export function bindAuthStateChange() {
       }
 
       if (event === 'SIGNED_IN') {
+        clearBootstrapRetry();
         const userChanged = state.currentUser?.id !== session?.user?.id;
         await handleSession(session, { forceReload: userChanged || state.articles.length === 0 });
         lastSignInAt = Date.now();
@@ -263,6 +293,7 @@ export function bindAuthStateChange() {
         if (authState.phase === 'signed_out') return;
         clearUser();
         clearRelinkRetry();
+        clearBootstrapRetry();
         authState.phase = 'signed_out';
         authState.initialized = true;
         return;
