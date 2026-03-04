@@ -5,19 +5,31 @@ export const safeStorage = {
     try {
       return localStorage.getItem(key);
     } catch {
-      return Object.prototype.hasOwnProperty.call(memStore, key) ? memStore[key] : null;
+      try {
+        return sessionStorage.getItem(key);
+      } catch {
+        return Object.prototype.hasOwnProperty.call(memStore, key) ? memStore[key] : null;
+      }
     }
   },
   setItem(key, value) {
     try {
       localStorage.setItem(key, value);
-    } catch {}
+    } catch {
+      try {
+        sessionStorage.setItem(key, value);
+      } catch {}
+    }
     memStore[key] = value;
   },
   removeItem(key) {
     try {
       localStorage.removeItem(key);
-    } catch {}
+    } catch {
+      try {
+        sessionStorage.removeItem(key);
+      } catch {}
+    }
     delete memStore[key];
   },
 };
