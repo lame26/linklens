@@ -112,6 +112,9 @@ export async function loadFromDB() {
         toast('네트워크 지연으로 캐시된 목록을 표시합니다', 'info');
         return;
       }
+      // 캐시가 없어도 인증 흐름을 끊지 않고 다음 동기화 기회를 기다린다.
+      toast('DB 응답이 지연되고 있습니다. 잠시 후 자동 동기화됩니다', 'info');
+      return;
     }
     const authErr = msg.includes('jwt') || msg.includes('token') || msg.includes('refresh');
     if (authErr) {

@@ -6,6 +6,8 @@ import { refresh, toast } from './ui.js';
 
 let sawInitialSession = false;
 let loadingSession = false; // 추가: 동시 loadFromDB 방지
+let lastManualSignOutAt = 0;
+let lastSignInAt = 0;
 
 function showAuthErr(msg) {
   const el = document.getElementById('authErr');
@@ -136,16 +138,17 @@ export async function doAuth() {
 
 export async function doSignOut() {
   document.getElementById('userDropdown').classList.remove('open');
+  lastManualSignOutAt = Date.now();
 
   if (sb) {
     try {
       await Promise.race([
-        sb.auth.signOut({ scope: 'local' }),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('signOut timeout')), 1200)),
+        sb.auth.signOut({ scope: 'local' }).catch((e) => {
+          console.warn('signOut failed:', e);
+        }),
+        new Promise((resolve) => setTimeout(resolve, 1200)),
       ]);
-    } catch (e) {
-      console.warn('signOut failed:', e);
-    }
+    } catch {}
   }
 
   // signOut 완료 후에 상태 초기화 (SIGNED_OUT 이벤트보다 먼저 처리)
@@ -220,11 +223,17 @@ export function bindAuthStateChange() {
       if (event === 'SIGNED_IN') {
         const userChanged = state.currentUser?.id !== session?.user?.id;
         await handleSession(session, { forceReload: userChanged || state.articles.length === 0 });
+        lastSignInAt = Date.now();
         authState.phase = 'signed_in';
         return;
       }
 
       if (event === 'SIGNED_OUT') {
+        const likelyStale = state.currentUser?.id && lastSignInAt > lastManualSignOutAt && Date.now() - lastSignInAt < 15000;
+        if (likelyStale) {
+          console.warn('Ignoring stale SIGNED_OUT event after quick re-login');
+          return;
+        }
         // doSignOut()이 이미 처리했으면 무시 (로그아웃 후 바로 로그인 시 덮어쓰기 방지)
         if (authState.phase === 'signed_out') return;
         clearUser();
