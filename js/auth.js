@@ -313,8 +313,14 @@ export function bindAuthStateChange() {
   sb.auth.onAuthStateChange(async (event, session) => {
     try {
       if (event === 'INITIAL_SESSION') {
-        clearBootstrapRetry();
-        if (session?.user) finishSessionRecoveryWindow();
+        // Only cancel the bootstrap retry and session-recovery window when we
+        // actually have a confirmed user.  If the session is null (e.g. access
+        // token expired and the refresh hasn't completed yet), keep the retry
+        // running so it can recover the session without waiting 35 seconds.
+        if (session?.user) {
+          clearBootstrapRetry();
+          finishSessionRecoveryWindow();
+        }
         sawInitialSession = true;
         authState.initialized = true;
         await handleSession(session, { forceReload: state.articles.length === 0 });
@@ -350,10 +356,20 @@ export function bindAuthStateChange() {
       }
 
       if (event === 'TOKEN_REFRESHED') {
-        if (session?.user && state.currentUser?.id === session.user.id) {
-          setUser(session.user);
-          if (state.articles.length === 0 && !loadingSession) {
-            await handleSession(session, { forceReload: true });
+        if (session?.user) {
+          // Always handle the refreshed session. The previous guard
+          // (currentUser?.id === session.user.id) would silently drop the event
+          // when currentUser had been cleared by an earlier INITIAL_SESSION with
+          // a null session, leaving the user stuck with an empty list.
+          const userChanged = state.currentUser?.id !== session.user.id;
+          if (userChanged || state.articles.length === 0) {
+            if (!loadingSession) {
+              clearBootstrapRetry();
+              finishSessionRecoveryWindow();
+              await handleSession(session, { forceReload: true });
+            }
+          } else {
+            setUser(session.user);
           }
         }
       }

@@ -1,9 +1,10 @@
 import { sb, refreshSession } from './supabase.js';
 import { state } from './state.js';
-import { toast } from './ui.js';
+import { toast, refresh } from './ui.js';
 import { getArticleCache, setArticleCache } from './storage.js';
 
 const DB_READ_TIMEOUT_MS = 30000;
+const DB_TIMEOUT_RETRY_DELAY_MS = 5000;
 const DB_WRITE_TIMEOUT_MS = 22000;
 
 function withTimeout(promise, message, ms) {
@@ -116,8 +117,15 @@ export async function loadFromDB() {
         toast('네트워크 지연으로 캐시된 목록을 표시합니다', 'info');
         return;
       }
-      // 캐시가 없어도 인증 흐름을 끊지 않고 다음 동기화 기회를 기다린다.
+      // No cache either — schedule one automatic retry so the toast is truthful.
       toast('DB 응답이 지연되고 있습니다. 잠시 후 자동 동기화됩니다', 'info');
+      setTimeout(async () => {
+        if (state.currentUser?.id !== userId) return; // user changed/logged out
+        try {
+          await runLoad();
+          refresh();
+        } catch {}
+      }, DB_TIMEOUT_RETRY_DELAY_MS);
       return;
     }
     const authErr = msg.includes('jwt') || msg.includes('token') || msg.includes('refresh');
